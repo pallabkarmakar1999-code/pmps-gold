@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMPS GOLD - My Orders</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #fffdf7;
+    color: #333;
+}
+header {
+    background: white;
+    color: #b8860b;
+    padding: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px #ddd;
+}
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+.order {
+    background: white;
+    padding: 18px;
+    margin: 15px 0;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px #ddd;
+}
+.status {
+    color: #b8860b;
+    font-weight: bold;
+    font-size: 18px;
+}
+button {
+    padding: 12px;
+    width: 100%;
+    background: #b8860b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>PMPS GOLD</header>
+
+<div class="container">
+
+<h2>📦 My Orders</h2>
+
+<div id="orders">Loading Orders...</div>
+
+<button onclick="location.href='dashboard.html'">
+Back to Dashboard
+</button>
+
+</div>
+
+<script type="module">
+
+import { db, auth } from "./firebase.js";
+
+import {
+    collection,
+    query,
+    where,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const ordersDiv = document.getElementById("orders");
+
+onAuthStateChanged(auth, async function(user) {
+
+    if (!user) {
+        window.location.href = "customer-login.html";
+        return;
+    }
+
+    try {
+
+        const q = query(
+            collection(db, "Orders"),
+            where("userId", "==", user.uid)
+        );
+
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+            ordersDiv.innerHTML = "<p>You have no orders yet.</p>";
+            return;
+        }
+
+        ordersDiv.innerHTML = "";
+
+        snapshot.forEach(function(doc) {
+
+            const order = doc.data();
+
+            const date = order.createdAt?.toDate
+                ? order.createdAt.toDate().toLocaleDateString()
+                : "Date unavailable";
+
+            const card = document.createElement("div");
+            card.className = "order";
+
+            const title = document.createElement("h3");
+            title.textContent = "Order ID: " + doc.id;
+
+            const product = document.createElement("p");
+            product.textContent = "Products: " +
+                (order.products || []).map(p => p.name).join(", ");
+
+            const total = document.createElement("p");
+            total.textContent = "Total: ₹" + (order.totalAmount || 0);
+
+            const orderDate = document.createElement("p");
+            orderDate.textContent = "Date: " + date;
+
+            const status = document.createElement("p");
+            status.className = "status";
+            status.textContent = "Status: " + (order.status || "Pending");
+
+            const invoiceBtn = document.createElement("button");
+
+invoiceBtn.textContent = "View Order Details & Invoice";
+
+invoiceBtn.onclick = function() {
+    window.location.href =
+        "order-details.html?id=" + encodeURIComponent(doc.id);
+};
+
+card.append(
+    title,
+    product,
+    total,
+    orderDate,
+    status,
+    invoiceBtn
+);
+            ordersDiv.appendChild(card);
+
+        });
+
+    } catch(error) {
+
+        ordersDiv.textContent = "Error: " + error.message;
+        console.error(error);
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>

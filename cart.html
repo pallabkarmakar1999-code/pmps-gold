@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMPS GOLD - My Cart</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #fffdf8;
+}
+
+header {
+    background: white;
+    padding: 18px;
+    color: #b8860b;
+    font-size: 24px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px #ddd;
+}
+
+.container { padding: 20px; }
+
+h2 { color: #9b7200; }
+
+.item {
+    background: white;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #ddd;
+}
+
+.item button {
+    background: #b8860b;
+    color: white;
+    border: none;
+    padding: 8px 13px;
+    border-radius: 5px;
+    margin: 5px;
+}
+
+.remove { background: #d32f2f !important; }
+
+.total {
+    font-size: 23px;
+    font-weight: bold;
+    color: #b8860b;
+    margin: 25px 0;
+}
+
+.checkout {
+    background: #25D366;
+    color: white;
+    border: none;
+    padding: 15px;
+    width: 100%;
+    border-radius: 8px;
+    font-size: 17px;
+}
+
+.back {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: #9b7200;
+}
+</style>
+</head>
+
+<body>
+
+<header>PMPS GOLD</header>
+
+<div class="container">
+
+<h2>🛒 My Shopping Cart</h2>
+
+<div id="cartItems"></div>
+
+<div class="total">
+Total: ₹<span id="total">0</span>
+</div>
+
+<button class="checkout" onclick="proceedToCheckout()">
+Proceed to Checkout →
+</button>
+
+<a href="index.html" class="back">
+← Continue Shopping
+</a>
+
+</div>
+
+<script>
+
+let cart = JSON.parse(
+    localStorage.getItem("pmps_cart")
+) || [];
+
+cart = cart.map(item => ({
+    ...item,
+    price: Number(item.price),
+    quantity: Number(item.quantity),
+    orderType: item.orderType || "retail",
+    moq: Number(item.moq || 1)
+}));
+
+function displayCart() {
+
+    let html = "";
+    let total = 0;
+
+    cart.forEach((item, index) => {
+
+        const subtotal = item.price * item.quantity;
+        total += subtotal;
+
+        const minimum =
+            item.orderType === "wholesale" ? item.moq : 1;
+
+        html += `
+        <div class="item">
+
+            <h3>${item.name}</h3>
+
+            <p>Order Type: ${item.orderType.toUpperCase()}</p>
+
+            <p>Unit Price: ₹${item.price}</p>
+
+            <p>Quantity: ${item.quantity}</p>
+
+            <p>Minimum Quantity: ${minimum}</p>
+
+            <p>Subtotal: ₹${subtotal}</p>
+
+            <button onclick="changeQty(${index}, 1)">+</button>
+
+            <button onclick="changeQty(${index}, -1)">-</button>
+
+            <button class="remove"
+            onclick="removeItem(${index})">Remove</button>
+
+        </div>
+        `;
+    });
+
+    if (cart.length === 0) {
+        html = "<p>Your cart is empty!</p>";
+    }
+
+    document.getElementById("cartItems").innerHTML = html;
+    document.getElementById("total").innerText = total;
+}
+
+function saveCart() {
+
+    localStorage.setItem(
+        "pmps_cart",
+        JSON.stringify(cart)
+    );
+
+    displayCart();
+}
+
+function changeQty(index, value) {
+
+    const item = cart[index];
+
+    const minimum =
+        item.orderType === "wholesale" ? item.moq : 1;
+
+    const newQuantity = item.quantity + value;
+
+    if (newQuantity < minimum) {
+        alert("Minimum " + item.orderType.toUpperCase()
+            + " Quantity is " + minimum);
+        return;
+    }
+
+    item.quantity = newQuantity;
+
+    saveCart();
+}
+
+function removeItem(index) {
+
+    if (!confirm("Remove this product from cart?")) return;
+
+    cart.splice(index, 1);
+    saveCart();
+}
+
+function proceedToCheckout() {
+
+    if (cart.length === 0) {
+        alert("Your cart is empty!");
+        return;
+    }
+
+    window.location.href = "checkout.html";
+}
+
+displayCart();
+
+</script>
+
+</body>
+</html>

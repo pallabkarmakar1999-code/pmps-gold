@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMPS GOLD - Invoice</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #fffdf7;
+    color: #333;
+}
+header {
+    padding: 20px;
+    background: white;
+    color: #b8860b;
+    font-size: 24px;
+    font-weight: bold;
+}
+.container {
+    max-width: 650px;
+    margin: 20px auto;
+    padding: 15px;
+}
+.invoice {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px #ddd;
+}
+h2, h3 {
+    color: #b8860b;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+th, td {
+    padding: 10px 5px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+.total {
+    text-align: right;
+    font-size: 21px;
+    font-weight: bold;
+    color: #b8860b;
+}
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 12px;
+    background: #b8860b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<header>PMPS GOLD</header>
+
+<div class="container">
+<div class="invoice" id="invoice">
+    <h2>Order Invoice</h2>
+    <p id="message">Loading Order Details...</p>
+    <div id="details"></div>
+</div>
+
+<button onclick="window.print()">Print / Save as PDF</button>
+
+<button onclick="location.href='my-orders.html'">
+Back to My Orders
+</button>
+</div>
+
+<script type="module">
+
+import { db, auth } from "./firebase.js";
+
+import {
+    doc,
+    getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const message = document.getElementById("message");
+const details = document.getElementById("details");
+
+function addText(parent, tag, text) {
+    const element = document.createElement(tag);
+    element.textContent = text;
+    parent.appendChild(element);
+    return element;
+}
+
+onAuthStateChanged(auth, async function(user) {
+
+    if (!user) {
+        window.location.href = "customer-login.html";
+        return;
+    }
+
+    const orderId = new URLSearchParams(
+        window.location.search
+    ).get("id");
+
+    if (!orderId) {
+        message.textContent = "Order ID missing.";
+        return;
+    }
+
+    try {
+        const orderRef = doc(db, "Orders", orderId);
+        const orderSnap = await getDoc(orderRef);
+
+        if (!orderSnap.exists()) {
+            message.textContent = "Order not found.";
+            return;
+        }
+
+        const order = orderSnap.data();
+
+        if (order.userId !== user.uid) {
+            message.textContent = "You cannot access this order.";
+            return;
+        }
+
+        message.textContent = "";
+
+        addText(details, "p", "Order ID: " + orderSnap.id);
+        addText(details, "p", "Customer: " + (order.customerName || ""));
+        addText(details, "p", "Mobile: " + (order.mobile || ""));
+        addText(details, "p", "Address: " + (order.address || ""));
+        addText(details, "p", "PIN: " + (order.pin || ""));
+        addText(details, "p", "Payment: " + (order.paymentMethod || ""));
+        addText(details, "p", "Order Type: " + (order.orderType || ""));
+        addText(details, "p", "Status: " + (order.status || "Pending"));
+
+        const date = order.createdAt?.toDate
+            ? order.createdAt.toDate().toLocaleString()
+            : "Date unavailable";
+
+        addText(details, "p", "Order Date: " + date);
+
+        addText(details, "h3", "Products");
+
+        const table = document.createElement("table");
+        const heading = document.createElement("tr");
+
+        ["Product", "Price", "Qty", "Total"].forEach(function(item) {
+            addText(heading, "th", item);
+        });
+
+        table.appendChild(heading);
+
+        (order.products || []).forEach(function(product) {
+            const row = document.createElement("tr");
+            const price = Number(product.price) || 0;
+            const quantity = Number(product.quantity) || 1;
+
+            [
+                product.name || "Product",
+                "₹" + price,
+                quantity,
+                "₹" + (price * quantity)
+            ].forEach(function(value) {
+                addText(row, "td", String(value));
+            });
+
+            table.appendChild(row);
+        });
+
+        details.appendChild(table);
+
+        const total = document.createElement("p");
+        total.className = "total";
+        total.textContent = "Grand Total: ₹" +
+            (Number(order.totalAmount) || 0);
+
+        details.appendChild(total);
+
+        addText(details, "h3", "Thank You for Shopping with PMPS GOLD!");
+
+    } catch(error) {
+        message.textContent = "Error: " + error.message;
+        console.error(error);
+    }
+
+});
+
+</script>
+
+</body>
+</html>

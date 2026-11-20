@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>PMPS GOLD - Order Tracking</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #fffdf8;
+    margin: 0;
+    color: #333;
+}
+
+header {
+    background: white;
+    color: #b8860b;
+    padding: 20px;
+    font-size: 25px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px #ddd;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+
+.box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px #ddd;
+}
+
+input {
+    width: 100%;
+    padding: 13px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    background: #b8860b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: .2s;
+}
+
+button:active {
+    transform: scale(.95);
+    background: #8a6500;
+}
+
+button:disabled {
+    background: #999;
+}
+
+#result {
+    margin-top: 20px;
+    overflow-wrap: anywhere;
+}
+
+.status {
+    color: #b8860b;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.product {
+    background: #fff4d6;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+
+.back {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: #a47a00;
+}
+</style>
+</head>
+
+<body>
+
+<header>PMPS GOLD</header>
+
+<div class="container">
+
+<h2>Track Your Order</h2>
+
+<div class="box">
+
+<p id="loginMessage">
+Login করে আপনার Order ID দিয়ে অর্ডার খুঁজুন।
+</p>
+
+<input
+id="orderId"
+placeholder="Enter your Order ID"
+autocomplete="off"
+>
+
+<button id="trackButton">
+Track Order
+</button>
+
+<div id="result"></div>
+
+</div>
+
+<a href="index.html" class="back">
+← Back to Home
+</a>
+
+</div>
+
+<script type="module">
+
+import { db, auth } from "./firebase.js";
+
+import {
+    doc,
+    getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+
+const orderInput = document.getElementById("orderId");
+const result = document.getElementById("result");
+const trackButton = document.getElementById("trackButton");
+
+let currentUser = null;
+
+const userReady = new Promise(resolve => {
+
+    onAuthStateChanged(auth, user => {
+
+        currentUser = user;
+
+        resolve(user);
+
+        if (!user) {
+
+            document.getElementById("loginMessage").innerText =
+                "আপনার অর্ডার দেখতে আগে Login করুন।";
+
+        } else {
+
+            document.getElementById("loginMessage").innerText =
+                "আপনার Order ID লিখে Track Order চাপুন।";
+
+        }
+
+    });
+
+});
+
+
+function safe(value) {
+
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    })[char]);
+
+}
+
+
+window.trackOrder = async function() {
+
+    const id = orderInput.value.trim();
+
+    if (!id) {
+
+        result.innerHTML = "Please enter Order ID.";
+        return;
+
+    }
+
+    trackButton.disabled = true;
+    trackButton.innerText = "Searching...";
+
+    result.innerHTML = "";
+
+    try {
+
+        await userReady;
+
+        if (!currentUser) {
+
+            result.innerHTML =
+                "Please Login First!";
+
+            window.location.href = "customer-login.html";
+
+            return;
+
+        }
+
+        const orderRef = doc(db, "Orders", id);
+
+        const orderSnap = await getDoc(orderRef);
+
+        if (!orderSnap.exists()) {
+
+            result.innerHTML =
+                "Order Not Found. Please check your Order ID.";
+
+            return;
+
+        }
+
+        const order = orderSnap.data();
+
+        // Check order ownership
+        // Firestore Security Rules also enforce this.
+
+        if (
+            order.userId !== currentUser.uid &&
+            currentUser.uid !== "k1iqKlSU1pYk16SNnWfajy7EdIw2"
+        ) {
+
+            result.innerHTML =
+                "এই Order ID আপনার অ্যাকাউন্টের নয়।";
+
+            return;
+
+        }
+
+
+        let productHTML = "";
+
+        if (Array.isArray(order.products)) {
+
+            order.products.forEach(item => {
+
+                productHTML += `
+
+                <div class="product">
+
+                    <b>${safe(item.name)}</b>
+
+                    <p>Order Type: ${safe(item.orderType)}</p>
+
+                    <p>Price: ₹${safe(item.price)}</p>
+
+                    <p>Quantity: ${safe(item.quantity)}</p>
+
+                    <p>Subtotal: ₹${
+                        Number(item.price || 0) *
+                        Number(item.quantity || 0)
+                    }</p>
+
+                </div>
+
+                `;
+
+            });
+
+        }
+
+
+        result.innerHTML = `
+
+            <h3>✅ Order Details</h3>
+
+            <p><b>Order ID:</b> ${safe(id)}</p>
+
+            <p><b>Customer:</b>
+            ${safe(order.customerName)}</p>
+
+            <p><b>Mobile:</b>
+            ${safe(order.mobile)}</p>
+
+            <p><b>Payment:</b>
+            ${safe(order.paymentMethod)}</p>
+
+            <hr>
+
+            <h3>Products</h3>
+
+            ${productHTML}
+
+            <hr>
+
+            <p class="status">
+            Status: ${safe(order.status || "Pending")}
+            </p>
+
+            <h3>
+            Total: ₹${Number(order.totalAmount || 0)}
+            </h3>
+
+        `;
+
+
+    } catch(error) {
+
+        console.error(error);
+
+        result.innerHTML =
+            "Unable to find order. Please try again.";
+
+    } finally {
+
+        trackButton.disabled = false;
+        trackButton.innerText = "Track Order";
+
+    }
+
+};
+
+
+trackButton.addEventListener("click", window.trackOrder);
+
+
+</script>
+
+</body>
+</html>

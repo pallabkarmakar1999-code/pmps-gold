@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMPS GOLD - My Profile</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #fffdf7;
+    color: #333;
+}
+header {
+    background: white;
+    color: #b8860b;
+    padding: 20px;
+    font-size: 24px;
+    font-weight: bold;
+}
+.container {
+    max-width: 500px;
+    margin: 25px auto;
+    padding: 20px;
+}
+.card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px #ddd;
+}
+h2 { color: #b8860b; }
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+input, textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px;
+    margin-top: 7px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+}
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 15px;
+    background: #b8860b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+}
+#message { color: green; }
+</style>
+</head>
+
+<body>
+
+<header>PMPS GOLD</header>
+
+<div class="container">
+<div class="card">
+
+<h2>My Profile</h2>
+
+<p>Mobile Number</p>
+<b id="mobile">Loading...</b>
+
+<label>Full Name</label>
+<input id="name" type="text" placeholder="Enter your name">
+
+<label>Delivery Address</label>
+<textarea id="address" rows="3"
+placeholder="Enter your full address"></textarea>
+
+<label>PIN Code</label>
+<input id="pin" type="text"
+inputmode="numeric" maxlength="6"
+placeholder="Enter PIN code">
+
+<button id="saveBtn">Save Profile</button>
+
+<p id="message"></p>
+
+<button onclick="location.href='dashboard.html'">
+Back to Dashboard
+</button>
+
+</div>
+</div>
+
+<script type="module">
+
+import { auth, db } from "./firebase.js";
+
+import {
+    doc,
+    getDoc,
+    setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const nameInput = document.getElementById("name");
+const addressInput = document.getElementById("address");
+const pinInput = document.getElementById("pin");
+const message = document.getElementById("message");
+
+let currentUser = null;
+
+onAuthStateChanged(auth, async function(user) {
+
+    if (!user) {
+        window.location.href = "customer-login.html";
+        return;
+    }
+
+    currentUser = user;
+
+    document.getElementById("mobile").textContent =
+        user.phoneNumber || "Unavailable";
+
+    try {
+        const profileRef = doc(db, "Customers", user.uid);
+        const profileSnap = await getDoc(profileRef);
+
+        if (profileSnap.exists()) {
+            const data = profileSnap.data();
+
+            nameInput.value = data.name || "";
+            addressInput.value = data.address || "";
+            pinInput.value = data.pin || "";
+        }
+
+    } catch(error) {
+        message.textContent = "Load Error: " + error.message;
+    }
+});
+
+document.getElementById("saveBtn").onclick = async function() {
+
+    if (!currentUser) return;
+
+    const name = nameInput.value.trim();
+    const address = addressInput.value.trim();
+    const pin = pinInput.value.trim();
+
+    if (!name || !address || !/^\d{6}$/.test(pin)) {
+        message.textContent =
+            "Enter name, address and valid 6 digit PIN.";
+        return;
+    }
+
+    try {
+
+        await setDoc(
+            doc(db, "Customers", currentUser.uid),
+            {
+                name: name,
+                address: address,
+                pin: pin,
+                mobile: currentUser.phoneNumber || ""
+            }
+        );
+
+        message.textContent = "Profile Saved Successfully!";
+
+    } catch(error) {
+        message.textContent = "Save Error: " + error.message;
+    }
+};
+
+</script>
+
+</body>
+</html>

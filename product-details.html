@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Product Details | PMPS GOLD</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #fffdf8;
+    margin: 0;
+    color: #333;
+}
+
+header {
+    background: white;
+    padding: 15px 18px;
+    color: #b8860b;
+    font-size: 23px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cart-top {
+    background: #b8860b;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 25px;
+    font-size: 15px;
+    text-decoration: none;
+}
+
+.container {
+    padding: 20px;
+    max-width: 600px;
+    margin: auto;
+}
+
+img {
+    width: 100%;
+    height: 300px;
+    object-fit: contain;
+    background: #fff1c2;
+    border-radius: 12px;
+}
+
+h2 {
+    color: #9b7200;
+}
+
+.price {
+    color: #b8860b;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+button {
+    color: white;
+    border: none;
+    padding: 13px 15px;
+    border-radius: 25px;
+    margin: 8px 4px 8px 0;
+    cursor: pointer;
+    font-size: 15px;
+
+    transition:
+        background-color 0.25s ease,
+        transform 0.15s ease,
+        box-shadow 0.2s ease;
+}
+
+/* CLICK ANIMATION */
+
+button:active {
+    transform: scale(0.92);
+    background-color: #704f00 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+button.clicked {
+    animation: buttonClick 0.3s ease;
+}
+
+@keyframes buttonClick {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(0.92);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.action-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+#addCart {
+    flex: 1;
+    background: #b8860b;
+    font-weight: bold;
+}
+
+#addCart.go-cart {
+    background: #198754;
+}
+
+#wishlist {
+    background: #fff0f0;
+    color: #d63384;
+    border: 1px solid #d63384;
+    font-size: 22px;
+    min-width: 55px;
+}
+
+#wishlist.saved {
+    background: #d63384;
+    color: white;
+}
+
+#buyNow {
+    width: 100%;
+    background: #e67e22;
+    font-weight: bold;
+    font-size: 17px;
+}
+
+#whatsapp {
+    width: 100%;
+    background: #25D366;
+    font-weight: bold;
+}
+
+select, input {
+    padding: 10px;
+    margin: 8px 0 15px;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+#status {
+    text-align: center;
+    padding: 15px;
+}
+
+.back {
+    display: block;
+    margin-top: 20px;
+    color: #a47a00;
+    text-decoration: none;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <span>PMPS GOLD</span>
+
+    <a href="cart.html" class="cart-top">
+        🛒 Cart (<span id="cartCount">0</span>)
+    </a>
+</header>
+
+<div class="container">
+
+<p id="status">Loading Product...</p>
+
+<img id="productImage" style="display:none;">
+
+<h2 id="productName"></h2>
+
+<p class="price" id="productPrice"></p>
+
+<p id="retailPrice"></p>
+<p id="wholesalePrice"></p>
+<p id="moq"></p>
+
+<label for="orderType">Select Order Type:</label>
+
+<select id="orderType">
+    <option value="retail">Retail</option>
+    <option value="wholesale">Wholesale</option>
+</select>
+
+<label for="quantity">Quantity:</label>
+
+<input id="quantity" type="number" value="1" min="1">
+
+<p id="productDescription"></p>
+<p id="productCategory"></p>
+
+<div class="action-row">
+
+    <button id="addCart">
+        Add to Cart 🛒
+    </button>
+
+    <button id="wishlist" title="Add to Wishlist">
+        ♡
+    </button>
+
+</div>
+
+<button id="buyNow">
+    ⚡ Buy Now
+</button>
+
+<button id="whatsapp">
+    Order on WhatsApp
+</button>
+
+<br><br>
+
+<a href="index.html" class="back">
+    ← Back to Shopping
+</a>
+
+</div>
+
+<script type="module">
+
+import { db, auth } from "./firebase.js";
+
+import {
+    doc,
+    getDoc,
+    setDoc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+
+const params = new URLSearchParams(window.location.search);
+const productId = params.get("id");
+
+let product = null;
+let isWishlisted = false;
+
+
+// LOGIN CHECK
+
+function waitForUser() {
+
+    return new Promise(resolve => {
+
+        const unsubscribe = onAuthStateChanged(auth, user => {
+
+            unsubscribe();
+            resolve(user);
+
+        });
+
+    });
+
+}
+
+
+// CART FUNCTIONS
+
+function getCart() {
+
+    return JSON.parse(
+        localStorage.getItem("pmps_cart")
+    ) || [];
+
+}
+
+
+function updateCartCount() {
+
+    const cart = getCart();
+
+    const count = cart.reduce(
+        (sum, item) => sum + Number(item.quantity || 0),
+        0
+    );
+
+    document.getElementById("cartCount").innerText = count;
+
+}
+
+
+function goToCart() {
+
+    window.location.href = "cart.html";
+
+}
+
+
+// ORDER DETAILS
+
+function getOrderDetails() {
+
+    const type =
+        document.getElementById("orderType").value;
+
+    const quantity =
+        Number(document.getElementById("quantity").value);
+
+    const price = type === "wholesale"
+        ? Number(product.wholesalePrice)
+        : Number(product.retailPrice);
+
+    const minimum = type === "wholesale"
+        ? Number(product.moq || 1)
+        : 1;
+
+    return {
+        type,
+        quantity,
+        price,
+        minimum
+    };
+
+}
+
+
+// VALIDATE ORDER
+
+function validateOrder(details) {
+
+    if (
+        !Number.isInteger(details.quantity) ||
+        details.quantity < details.minimum
+    ) {
+
+        alert(
+            "Minimum order quantity is " +
+            details.minimum
+        );
+
+        return false;
+
+    }
+
+    if (
+        !Number.isFinite(details.price) ||
+        details.price <= 0
+    ) {
+
+        alert("Invalid Product Price!");
+
+        return false;
+
+    }
+
+    return true;
+
+}
+
+
+// CART BUTTON STATUS
+
+function updateButtonStatus() {
+
+    if (!product) return;
+
+    const details = getOrderDetails();
+    const cart = getCart();
+
+    const existing = cart.find(item =>
+        item.productId === productId &&
+        item.orderType === details.type
+    );
+
+    const button = document.getElementById("addCart");
+
+    if (existing) {
+
+        button.innerText = "Go to Cart 🛒";
+        button.classList.add("go-cart");
+
+    } else {
+
+        button.innerText = "Add to Cart 🛒";
+        button.classList.remove("go-cart");
+
+    }
+
+}
+
+
+// WISHLIST BUTTON
+
+function updateWishlistButton() {
+
+    const button = document.getElementById("wishlist");
+
+    if (isWishlisted) {
+
+        button.innerText = "♥";
+        button.classList.add("saved");
+
+    } else {
+
+        button.innerText = "♡";
+        button.classList.remove("saved");
+
+    }
+
+}
+
+
+// CHECK WISHLIST
+
+async function checkWishlist() {
+
+    const user = await waitForUser();
+
+    if (!user) {
+
+        isWishlisted = false;
+        updateWishlistButton();
+        return;
+
+    }
+
+    const wishlistRef = doc(
+        db,
+        "Customers",
+        user.uid,
+        "Wishlist",
+        productId
+    );
+
+    const snapshot = await getDoc(wishlistRef);
+
+    isWishlisted = snapshot.exists();
+
+    updateWishlistButton();
+
+}
+
+
+// UPDATE PRICE
+
+function updateSelectedPrice() {
+
+    if (!product) return;
+
+    const details = getOrderDetails();
+
+    document.getElementById("productPrice").textContent =
+        "Selected Price: ₹" + details.price;
+
+    const quantityInput =
+        document.getElementById("quantity");
+
+    quantityInput.min = details.minimum;
+
+    if (details.quantity < details.minimum) {
+
+        quantityInput.value = details.minimum;
+
+    }
+
+    updateButtonStatus();
+
+}
+
+
+document.getElementById("orderType").addEventListener(
+    "change",
+    updateSelectedPrice
+);
+
+document.getElementById("quantity").addEventListener(
+    "input",
+    updateButtonStatus
+);
+
+
+// LOAD PRODUCT
+
+async function loadProduct() {
+
+    try {
+
+        if (!productId) {
+            throw new Error("Product ID Missing");
+        }
+
+        const productRef = doc(db, "Products", productId);
+
+        const snapshot = await getDoc(productRef);
+
+        if (!snapshot.exists()) {
+            throw new Error("Product Not Found");
+        }
+
+        product = snapshot.data();
+
+        document.getElementById("productImage").src =
+            product.image || "";
+
+        document.getElementById("productImage").style.display =
+            "block";
+
+        document.getElementById("productName").textContent =
+            product.name || "Jewellery";
+
+        document.getElementById("retailPrice").textContent =
+            "Retail Price: ₹" + (product.retailPrice || 0);
+
+        document.getElementById("wholesalePrice").textContent =
+            "Wholesale Price: ₹" + (product.wholesalePrice || 0);
+
+        document.getElementById("moq").textContent =
+            "Wholesale Minimum Order: " +
+            (product.moq || 1) + " Pieces";
+
+        document.getElementById("productDescription").textContent =
+            product.description || "Premium Artificial Jewellery";
+
+        document.getElementById("productCategory").textContent =
+            "Category: " + (product.category || "Other");
+
+        updateSelectedPrice();
+        updateCartCount();
+
+        await checkWishlist();
+
+        document.getElementById("status").innerText = "";
+
+    } catch (error) {
+
+        document.getElementById("status").innerText =
+            error.message;
+
+    }
+
+}
+
+
+// ADD PRODUCT TO CART
+
+function addProductToCart(details) {
+
+    const cart = getCart();
+
+    const existing = cart.find(item =>
+        item.productId === productId &&
+        item.orderType === details.type
+    );
+
+    if (existing) {
+
+        existing.quantity =
+            Number(existing.quantity) + details.quantity;
+
+        existing.price = details.price;
+        existing.moq = details.minimum;
+
+    } else {
+
+        cart.push({
+
+            productId: productId,
+            name: product.name,
+            price: details.price,
+            quantity: details.quantity,
+            orderType: details.type,
+            moq: details.minimum
+
+        });
+
+    }
+
+    localStorage.setItem(
+        "pmps_cart",
+        JSON.stringify(cart)
+    );
+
+    updateCartCount();
+    updateButtonStatus();
+
+}
+
+
+// ADD TO CART BUTTON
+
+document.getElementById("addCart").addEventListener(
+    "click",
+    () => {
+
+        if (!product) return;
+
+        const details = getOrderDetails();
+
+        const existing = getCart().find(item =>
+            item.productId === productId &&
+            item.orderType === details.type
+        );
+
+        if (existing) {
+            goToCart();
+            return;
+        }
+
+        if (!validateOrder(details)) return;
+
+        addProductToCart(details);
+
+        alert("Added to Cart Successfully!");
+
+    }
+);
+
+
+// BUY NOW BUTTON
+
+document.getElementById("buyNow").addEventListener(
+    "click",
+    async () => {
+
+        if (!product) return;
+
+        const details = getOrderDetails();
+
+        if (!validateOrder(details)) return;
+
+        const user = await waitForUser();
+
+        if (!user) {
+
+            alert("Please login before buying.");
+
+            window.location.href = "customer-login.html";
+
+            return;
+
+        }
+
+        addProductToCart(details);
+
+        window.location.href = "checkout.html";
+
+    }
+);
+
+
+// ADD TO WISHLIST
+
+document.getElementById("wishlist").addEventListener(
+    "click",
+    async () => {
+
+        if (!product) return;
+
+        try {
+
+            const user = await waitForUser();
+
+            if (!user) {
+
+                alert("Please login to use Wishlist.");
+
+                window.location.href = "customer-login.html";
+
+                return;
+
+            }
+
+            const wishlistRef = doc(
+                db,
+                "Customers",
+                user.uid,
+                "Wishlist",
+                productId
+            );
+
+            if (isWishlisted) {
+
+                alert("This product is already in your Wishlist!");
+
+                return;
+
+            }
+
+            await setDoc(wishlistRef, {
+
+                productId: productId,
+                name: product.name || "",
+                price: Number(product.retailPrice) || 0,
+                image: product.image || "",
+                addedAt: serverTimestamp()
+
+            });
+
+            isWishlisted = true;
+            updateWishlistButton();
+
+            alert("Added to Wishlist Successfully! ❤️");
+
+        } catch (error) {
+
+            alert("Wishlist Error: " + error.message);
+
+        }
+
+    }
+);
+
+
+// WHATSAPP ORDER
+
+document.getElementById("whatsapp").addEventListener(
+    "click",
+    () => {
+
+        if (!product) return;
+
+        const details = getOrderDetails();
+
+        if (!validateOrder(details)) return;
+
+        const total = details.price * details.quantity;
+
+        const message =
+
+            "Hello PMPS GOLD!\n" +
+            "Product: " + product.name + "\n" +
+            "Order Type: " + details.type.toUpperCase() + "\n" +
+            "Quantity: " + details.quantity + "\n" +
+            "Unit Price: ₹" + details.price + "\n" +
+            "Total: ₹" + total;
+
+        window.open(
+
+            "https://wa.me/917699377496?text=" +
+            encodeURIComponent(message),
+
+            "_blank"
+
+        );
+
+    }
+);
+
+
+// BUTTON CLICK ANIMATION
+
+document.querySelectorAll("button").forEach(button => {
+
+    button.addEventListener("click", function() {
+
+        this.classList.remove("clicked");
+
+        void this.offsetWidth;
+
+        this.classList.add("clicked");
+
+    });
+
+});
+
+
+// INITIAL LOAD
+
+loadProduct();
+
+</script>
+
+</body>
+</html>

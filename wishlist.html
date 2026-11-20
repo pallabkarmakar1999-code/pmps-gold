@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMPS GOLD - Wishlist</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #fffdf7;
+    color: #333;
+}
+header {
+    background: white;
+    color: #b8860b;
+    padding: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px #ddd;
+}
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+.product {
+    background: white;
+    padding: 16px;
+    margin: 15px 0;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px #ddd;
+}
+.product img {
+    width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+}
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background: #b8860b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+}
+.remove {
+    background: #b22222;
+}
+</style>
+</head>
+
+<body>
+
+<header>PMPS GOLD</header>
+
+<div class="container">
+    <h2>❤️ My Wishlist</h2>
+
+    <div id="wishlist">Loading...</div>
+
+    <button onclick="location.href='index.html'">
+        Continue Shopping
+    </button>
+
+    <button onclick="location.href='dashboard.html'">
+        Back to Dashboard
+    </button>
+</div>
+
+<script type="module">
+
+import { auth, db } from "./firebase.js";
+
+import {
+    collection,
+    getDocs,
+    deleteDoc,
+    doc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const wishlistDiv = document.getElementById("wishlist");
+
+async function loadWishlist(user) {
+
+    wishlistDiv.textContent = "Loading...";
+
+    try {
+        const wishlistRef = collection(
+            db, "Customers", user.uid, "Wishlist"
+        );
+
+        const snapshot = await getDocs(wishlistRef);
+
+        wishlistDiv.innerHTML = "";
+
+        if (snapshot.empty) {
+            wishlistDiv.textContent = "Your Wishlist is empty.";
+            return;
+        }
+
+        snapshot.forEach(function(item) {
+
+            const data = item.data();
+
+            const card = document.createElement("div");
+            card.className = "product";
+
+            if (data.image) {
+                const img = document.createElement("img");
+                img.src = data.image;
+                img.alt = data.name || "Jewellery";
+                card.appendChild(img);
+            }
+
+            const name = document.createElement("h3");
+            name.textContent = data.name || "Product";
+            card.appendChild(name);
+
+            const price = document.createElement("p");
+            price.textContent = "Price: ₹" + (data.price || 0);
+            card.appendChild(price);
+
+            const removeBtn = document.createElement("button");
+            removeBtn.className = "remove";
+            removeBtn.textContent = "Remove from Wishlist";
+
+            removeBtn.onclick = async function() {
+                try {
+                    await deleteDoc(doc(
+                        db, "Customers", user.uid,
+                        "Wishlist", item.id
+                    ));
+
+                    loadWishlist(user);
+                } catch(error) {
+                    alert("Remove Error: " + error.message);
+                }
+            };
+
+            card.appendChild(removeBtn);
+            wishlistDiv.appendChild(card);
+        });
+
+    } catch(error) {
+        wishlistDiv.textContent = "Error: " + error.message;
+    }
+}
+
+onAuthStateChanged(auth, function(user) {
+    if (!user) {
+        window.location.href = "customer-login.html";
+        return;
+    }
+
+    loadWishlist(user);
+});
+
+</script>
+
+</body>
+</html>

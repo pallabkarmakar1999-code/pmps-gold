@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMPS GOLD - Checkout</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#fffdf8;color:#333}
+header{background:white;padding:20px;color:#b8860b;font-size:25px;font-weight:bold;box-shadow:0 2px 8px #ddd}
+.container{padding:20px;max-width:600px;margin:auto}
+h2{color:#a47a00}
+.form-box{background:white;padding:18px;border-radius:12px;box-shadow:0 2px 10px #ddd}
+label{display:block;margin-top:15px;font-weight:bold}
+input,textarea,select{width:100%;padding:13px;margin-top:7px;border:1px solid #ddd;border-radius:7px;font-size:15px}
+.summary{background:#fff4d6;padding:15px;margin-top:20px;border-radius:10px}
+.total{font-size:22px;font-weight:bold;color:#a47a00}
+button{width:100%;padding:15px;margin-top:20px;background:#25D366;color:white;border:none;border-radius:8px;font-size:17px;font-weight:bold;transition:transform .15s,background .2s}
+button:active{transform:scale(.94);background:#128c4a}
+button.clicked{animation:buttonClick .3s ease}
+@keyframes buttonClick{0%{transform:scale(1)}50%{transform:scale(.94)}100%{transform:scale(1)}}
+button:disabled{background:#999}
+.back{display:block;text-align:center;margin-top:20px;color:#a47a00}
+.mode{background:#fff4d6;padding:10px;border-radius:8px;color:#8a6500;font-weight:bold}
+.product-box{background:white;padding:12px;margin:12px 0;border:1px solid #e5d5a5;border-radius:8px}
+.product-box p{margin:7px 0}
+.small{font-size:13px;color:#666}
+</style>
+</head>
+
+<body>
+
+<header>PMPS GOLD</header>
+
+<div class="container">
+
+<h2>Customer Checkout</h2>
+<p id="checkoutMode" class="mode"></p>
+
+<div class="form-box">
+
+<form id="orderForm">
+
+<label>Full Name</label>
+<input type="text" id="name" placeholder="Enter your name" required>
+
+<label>Mobile Number</label>
+<input type="tel" id="mobile" placeholder="10 digit mobile number"
+pattern="[6-9][0-9]{9}" maxlength="10" required>
+
+<label>Full Address</label>
+<textarea id="address" placeholder="Enter delivery address" required></textarea>
+
+<label>PIN Code</label>
+<input type="text" id="pin" placeholder="6 digit PIN code"
+pattern="[0-9]{6}" maxlength="6" required>
+
+<label>Payment Method</label>
+<select id="payment">
+<option value="UPI">UPI</option>
+<option value="Debit/Credit Card">Debit/Credit Card</option>
+<option value="Cash on Delivery">Cash on Delivery</option>
+</select>
+
+<div class="summary">
+<h3>Order Summary</h3>
+<div id="items">Loading products...</div>
+<hr>
+<div class="total">Total: ₹<span id="total">0</span></div>
+</div>
+
+<button type="submit" id="placeOrder">Place Order via WhatsApp</button>
+
+</form>
+</div>
+
+<a href="index.html" class="back">← Continue Shopping</a>
+
+</div>
+
+<script type="module">
+
+import {db,auth} from "./firebase.js";
+
+import {
+collection,
+addDoc,
+serverTimestamp,
+doc,
+getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const itemsDiv=document.getElementById("items");
+const totalSpan=document.getElementById("total");
+const orderForm=document.getElementById("orderForm");
+const placeOrderButton=document.getElementById("placeOrder");
+
+let currentUser=null;
+let total=0;
+
+const userReady=new Promise(resolve=>{
+onAuthStateChanged(auth,user=>{
+currentUser=user;
+resolve(user);
+});
+});
+
+const buyNowData=localStorage.getItem("pmps_buy_now");
+const isBuyNow=!!buyNowData;
+
+let cart=[];
+
+if(isBuyNow){
+try{
+cart=[JSON.parse(buyNowData)];
+document.getElementById("checkoutMode").innerText="⚡ Buy Now Checkout";
+}catch(e){
+cart=[];
+}
+}else{
+cart=JSON.parse(localStorage.getItem("pmps_cart")||"[]");
+document.getElementById("checkoutMode").innerText="🛒 Cart Checkout";
+}
+
+
+// LOAD LATEST PRODUCT PRICES FROM FIRESTORE
+
+async function loadProducts(){
+
+for(let item of cart){
+
+item.productId=item.productId||"";
+item.name=item.name||"Product";
+item.quantity=Number(item.quantity)||1;
+item.orderType=(item.orderType||"retail").toLowerCase();
+item.moq=Number(item.moq)||1;
+
+if(item.productId){
+
+try{
+
+const productRef=doc(db,"Products",item.productId);
+const productSnap=await getDoc(productRef);
+
+if(productSnap.exists()){
+
+const product=productSnap.data();
+
+item.name=product.name||item.name;
+
+item.retailPrice=Number(product.retailPrice||product.price||0);
+item.wholesalePrice=Number(product.wholesalePrice||0);
+item.moq=Number(product.moq)||1;
+
+// Initial price according to selected type
+
+item.price=item.orderType==="wholesale"
+?item.wholesalePrice
+:item.retailPrice;
+
+}
+
+}catch(error){
+console.error("Product loading error:",error);
+}
+
+}
+
+}
+
+showSummary();
+
+}
+
+function showSummary(){
+
+let html="";
+total=0;
+
+cart.forEach((item,index)=>{
+
+const amount=item.price*item.quantity;
+total+=amount;
+
+html+=`
+
+<div class="product-box">
+
+<b>${item.name}</b>
+
+<label>Order Type</label>
+
+<select class="orderType" data-index="${index}">
+
+<option value="retail" ${item.orderType==="retail"?"selected":""}>
+Retail
+</option>
+
+<option value="wholesale" ${item.orderType==="wholesale"?"selected":""}
+${item.wholesalePrice>0?"":"disabled"}>
+Wholesale
+</option>
+
+</select>
+
+<p>Unit Price: ₹${item.price}</p>
+
+<p class="small">Wholesale MOQ: ${item.moq}</p>
+
+<label>Quantity</label>
+
+<input type="number"
+class="quantity"
+data-index="${index}"
+min="${item.orderType==="wholesale"?item.moq:1}"
+value="${item.quantity}">
+
+<p><b>Subtotal: ₹${amount}</b></p>
+
+</div>
+
+`;
+
+});
+
+if(cart.length===0){
+html="<p>Your cart is empty.</p>";
+placeOrderButton.disabled=true;
+}
+
+itemsDiv.innerHTML=html;
+totalSpan.innerText=total;
+
+}
+
+
+// CHANGE ORDER TYPE
+
+itemsDiv.addEventListener("change",function(e){
+
+const index=Number(e.target.dataset.index);
+
+if(e.target.classList.contains("orderType")){
+
+const item=cart[index];
+
+item.orderType=e.target.value;
+
+if(item.orderType==="wholesale"){
+
+item.price=item.wholesalePrice;
+item.quantity=Math.max(item.quantity,item.moq);
+
+}else{
+
+item.price=item.retailPrice;
+item.quantity=Math.max(1,item.quantity);
+
+}
+
+showSummary();
+
+}
+
+if(e.target.classList.contains("quantity")){
+
+const item=cart[index];
+
+let quantity=Number(e.target.value);
+
+const minimum=item.orderType==="wholesale"?item.moq:1;
+
+if(!Number.isInteger(quantity)||quantity<minimum){
+
+alert("Minimum Quantity হলো "+minimum);
+
+quantity=minimum;
+
+}
+
+item.quantity=quantity;
+
+showSummary();
+
+}
+
+});
+
+
+loadProducts();
+
+
+// VALIDATE CART
+
+function validateCart(){
+
+for(const item of cart){
+
+const minimum=item.orderType==="wholesale"?item.moq:1;
+
+if(!Number.isInteger(item.quantity)||item.quantity<minimum){
+
+alert(item.name+" এর Minimum Quantity হলো "+minimum);
+return false;
+
+}
+
+if(item.price<=0){
+
+alert("Invalid product price: "+item.name);
+return false;
+
+}
+
+}
+
+return true;
+
+}
+
+
+// PLACE ORDER
+
+orderForm.addEventListener("submit",async function(e){
+
+e.preventDefault();
+
+if(cart.length===0){
+alert("Your cart is empty!");
+return;
+}
+
+if(!validateCart())return;
+
+await userReady;
+
+if(!currentUser){
+
+alert("Please login before placing your order.");
+window.location.href="customer-login.html";
+return;
+
+}
+
+const name=document.getElementById("name").value.trim();
+const mobile=document.getElementById("mobile").value.trim();
+const address=document.getElementById("address").value.trim();
+const pin=document.getElementById("pin").value.trim();
+const payment=document.getElementById("payment").value;
+
+if(!/^[6-9][0-9]{9}$/.test(mobile)){
+alert("Enter a valid 10 digit mobile number.");
+return;
+}
+
+if(!/^[0-9]{6}$/.test(pin)){
+alert("Enter a valid 6 digit PIN code.");
+return;
+}
+
+placeOrderButton.disabled=true;
+placeOrderButton.innerText="Please Wait...";
+
+try{
+
+const orderRef=await addDoc(collection(db,"Orders"),{
+
+userId:currentUser.uid,
+customerName:name,
+mobile:mobile,
+address:address,
+pin:pin,
+products:cart,
+totalAmount:total,
+paymentMethod:payment,
+status:"Pending",
+createdAt:serverTimestamp()
+
+});
+
+let message="NEW ORDER - PMPS GOLD\n\n";
+
+message+="Order ID: "+orderRef.id+"\n";
+message+="Customer: "+name+"\n";
+message+="Mobile: "+mobile+"\n";
+message+="Address: "+address+"\n";
+message+="PIN: "+pin+"\n";
+message+="Payment: "+payment+"\n\n";
+message+="PRODUCT DETAILS:\n";
+
+cart.forEach(item=>{
+
+message+="\nProduct: "+item.name;
+message+="\nOrder Type: "+item.orderType;
+message+="\nPrice: ₹"+item.price;
+message+="\nQuantity: "+item.quantity;
+message+="\nMOQ: "+item.moq;
+message+="\nSubtotal: ₹"+(item.price*item.quantity)+"\n";
+
+});
+
+message+="\nTOTAL: ₹"+total;
+message+="\n\nPlease confirm my order.";
+
+alert("Order Saved Successfully!");
+
+if(isBuyNow){
+localStorage.removeItem("pmps_buy_now");
+}else{
+localStorage.removeItem("pmps_cart");
+}
+
+const encodedMessage=encodeURIComponent(message);
+
+window.location.href=
+"https://api.whatsapp.com/send?phone=917699377496&text="+encodedMessage;
+
+}catch(error){
+
+alert("Order Save Failed: "+error.message);
+
+placeOrderButton.disabled=false;
+placeOrderButton.innerText="Place Order via WhatsApp";
+
+}
+
+});
+
+
+// BUTTON ANIMATION
+
+document.querySelectorAll("button").forEach(button=>{
+
+button.addEventListener("click",function(){
+
+this.classList.remove("clicked");
+void this.offsetWidth;
+this.classList.add("clicked");
+
+});
+
+});
+
+</script>
+
+</body>
+</html>
