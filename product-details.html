@@ -18,6 +18,10 @@ body {
     color: #333;
 }
 
+#siteNav {
+    width: 100%;
+}
+
 header {
     background: white;
     padding: 15px 18px;
@@ -78,8 +82,6 @@ button {
         box-shadow 0.2s ease;
 }
 
-/* CLICK ANIMATION */
-
 button:active {
     transform: scale(0.92);
     background-color: #704f00 !important;
@@ -91,17 +93,9 @@ button.clicked {
 }
 
 @keyframes buttonClick {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(0.92);
-    }
-
-    100% {
-        transform: scale(1);
-    }
+    0% { transform: scale(1); }
+    50% { transform: scale(0.92); }
+    100% { transform: scale(1); }
 }
 
 .action-row {
@@ -165,75 +159,87 @@ select, input {
     color: #a47a00;
     text-decoration: none;
 }
-
 </style>
 </head>
 
 <body>
 
+<!-- COMMON NAVIGATION -->
+
+<div id="siteNav">
+    <p style="text-align:center;padding:15px;">
+        Loading Menu...
+    </p>
+</div>
+
 <header>
     <span>PMPS GOLD</span>
 
-    <a href="cart.html" class="cart-top">
+    <a href="./cart.html" class="cart-top">
         🛒 Cart (<span id="cartCount">0</span>)
     </a>
 </header>
 
 <div class="container">
 
-<p id="status">Loading Product...</p>
+    <p id="status">Loading Product...</p>
 
-<img id="productImage" style="display:none;">
+    <img id="productImage" style="display:none;">
 
-<h2 id="productName"></h2>
+    <h2 id="productName"></h2>
 
-<p class="price" id="productPrice"></p>
+    <p class="price" id="productPrice"></p>
 
-<p id="retailPrice"></p>
-<p id="wholesalePrice"></p>
-<p id="moq"></p>
+    <p id="retailPrice"></p>
+    <p id="wholesalePrice"></p>
+    <p id="moq"></p>
 
-<label for="orderType">Select Order Type:</label>
+    <label for="orderType">Select Order Type:</label>
 
-<select id="orderType">
-    <option value="retail">Retail</option>
-    <option value="wholesale">Wholesale</option>
-</select>
+    <select id="orderType">
+        <option value="retail">Retail</option>
+        <option value="wholesale">Wholesale</option>
+    </select>
 
-<label for="quantity">Quantity:</label>
+    <label for="quantity">Quantity:</label>
 
-<input id="quantity" type="number" value="1" min="1">
+    <input id="quantity" type="number" value="1" min="1">
 
-<p id="productDescription"></p>
-<p id="productCategory"></p>
+    <p id="productDescription"></p>
+    <p id="productCategory"></p>
 
-<div class="action-row">
+    <div class="action-row">
 
-    <button id="addCart">
-        Add to Cart 🛒
+        <button id="addCart">
+            Add to Cart 🛒
+        </button>
+
+        <button id="wishlist" title="Add to Wishlist">
+            ♡
+        </button>
+
+    </div>
+
+    <button id="buyNow">
+        ⚡ Buy Now
     </button>
 
-    <button id="wishlist" title="Add to Wishlist">
-        ♡
+    <button id="whatsapp">
+        Order on WhatsApp
     </button>
+
+    <br><br>
+
+    <a href="./index.html" class="back">
+        ← Back to Shopping
+    </a>
 
 </div>
 
-<button id="buyNow">
-    ⚡ Buy Now
-</button>
+<!-- COMMON NAVIGATION SCRIPT -->
 
-<button id="whatsapp">
-    Order on WhatsApp
-</button>
+<script src="./nav.js"></script>
 
-<br><br>
-
-<a href="index.html" class="back">
-    ← Back to Shopping
-</a>
-
-</div>
 
 <script type="module">
 
@@ -252,9 +258,11 @@ import {
 
 
 const params = new URLSearchParams(window.location.search);
+
 const productId = params.get("id");
 
 let product = null;
+
 let isWishlisted = false;
 
 
@@ -267,6 +275,7 @@ function waitForUser() {
         const unsubscribe = onAuthStateChanged(auth, user => {
 
             unsubscribe();
+
             resolve(user);
 
         });
@@ -303,7 +312,7 @@ function updateCartCount() {
 
 function goToCart() {
 
-    window.location.href = "cart.html";
+    window.location.href = "./cart.html";
 
 }
 
@@ -377,6 +386,7 @@ function updateButtonStatus() {
     if (!product) return;
 
     const details = getOrderDetails();
+
     const cart = getCart();
 
     const existing = cart.find(item =>
@@ -389,11 +399,13 @@ function updateButtonStatus() {
     if (existing) {
 
         button.innerText = "Go to Cart 🛒";
+
         button.classList.add("go-cart");
 
     } else {
 
         button.innerText = "Add to Cart 🛒";
+
         button.classList.remove("go-cart");
 
     }
@@ -410,11 +422,13 @@ function updateWishlistButton() {
     if (isWishlisted) {
 
         button.innerText = "♥";
+
         button.classList.add("saved");
 
     } else {
 
         button.innerText = "♡";
+
         button.classList.remove("saved");
 
     }
@@ -431,7 +445,9 @@ async function checkWishlist() {
     if (!user) {
 
         isWishlisted = false;
+
         updateWishlistButton();
+
         return;
 
     }
@@ -498,7 +514,9 @@ async function loadProduct() {
     try {
 
         if (!productId) {
+
             throw new Error("Product ID Missing");
+
         }
 
         const productRef = doc(db, "Products", productId);
@@ -506,7 +524,9 @@ async function loadProduct() {
         const snapshot = await getDoc(productRef);
 
         if (!snapshot.exists()) {
+
             throw new Error("Product Not Found");
+
         }
 
         product = snapshot.data();
@@ -537,6 +557,7 @@ async function loadProduct() {
             "Category: " + (product.category || "Other");
 
         updateSelectedPrice();
+
         updateCartCount();
 
         await checkWishlist();
@@ -570,6 +591,7 @@ function addProductToCart(details) {
             Number(existing.quantity) + details.quantity;
 
         existing.price = details.price;
+
         existing.moq = details.minimum;
 
     } else {
@@ -577,10 +599,15 @@ function addProductToCart(details) {
         cart.push({
 
             productId: productId,
+
             name: product.name,
+
             price: details.price,
+
             quantity: details.quantity,
+
             orderType: details.type,
+
             moq: details.minimum
 
         });
@@ -593,6 +620,7 @@ function addProductToCart(details) {
     );
 
     updateCartCount();
+
     updateButtonStatus();
 
 }
@@ -614,8 +642,11 @@ document.getElementById("addCart").addEventListener(
         );
 
         if (existing) {
+
             goToCart();
+
             return;
+
         }
 
         if (!validateOrder(details)) return;
@@ -646,7 +677,7 @@ document.getElementById("buyNow").addEventListener(
 
             alert("Please login before buying.");
 
-            window.location.href = "customer-login.html";
+            window.location.href = "./customer-login.html";
 
             return;
 
@@ -654,7 +685,7 @@ document.getElementById("buyNow").addEventListener(
 
         addProductToCart(details);
 
-        window.location.href = "checkout.html";
+        window.location.href = "./checkout.html";
 
     }
 );
@@ -676,7 +707,7 @@ document.getElementById("wishlist").addEventListener(
 
                 alert("Please login to use Wishlist.");
 
-                window.location.href = "customer-login.html";
+                window.location.href = "./customer-login.html";
 
                 return;
 
@@ -701,14 +732,19 @@ document.getElementById("wishlist").addEventListener(
             await setDoc(wishlistRef, {
 
                 productId: productId,
+
                 name: product.name || "",
+
                 price: Number(product.retailPrice) || 0,
+
                 image: product.image || "",
+
                 addedAt: serverTimestamp()
 
             });
 
             isWishlisted = true;
+
             updateWishlistButton();
 
             alert("Added to Wishlist Successfully! ❤️");
@@ -740,10 +776,15 @@ document.getElementById("whatsapp").addEventListener(
         const message =
 
             "Hello PMPS GOLD!\n" +
+
             "Product: " + product.name + "\n" +
+
             "Order Type: " + details.type.toUpperCase() + "\n" +
+
             "Quantity: " + details.quantity + "\n" +
+
             "Unit Price: ₹" + details.price + "\n" +
+
             "Total: ₹" + total;
 
         window.open(

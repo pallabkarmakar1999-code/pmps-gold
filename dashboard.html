@@ -18,6 +18,10 @@ body {
     color: #333;
 }
 
+#siteNav {
+    width: 100%;
+}
+
 header {
     background: white;
     color: #b8860b;
@@ -60,6 +64,11 @@ button {
 button:active {
     transform: scale(.96);
     background: #8a6500;
+}
+
+button:disabled {
+    background: #999;
+    cursor: not-allowed;
 }
 
 .logout {
@@ -105,18 +114,24 @@ a {
 #notificationList {
     display: none;
 }
-
 </style>
 </head>
 
 <body>
+
+<!-- COMMON NAVIGATION -->
+
+<div id="siteNav">
+    <p style="text-align:center;padding:15px;">
+        Loading Menu...
+    </p>
+</div>
 
 <header>PMPS GOLD</header>
 
 <div class="container">
 
 <h2>My Dashboard</h2>
-
 
 <!-- CUSTOMER INFORMATION -->
 
@@ -156,13 +171,17 @@ View Notifications
 
 <h3>My Account</h3>
 
-<p>👤 <a href="profile.html">My Profile</a></p>
+<p>👤 <a href="./profile.html">My Profile</a></p>
 
-<p>📦 <a href="my-orders.html">My Orders</a></p>
+<p>📦 <a href="./my-orders.html">My Orders</a></p>
 
-<p>❤️ <a href="wishlist.html">My Wishlist</a></p>
+<p>❤️ <a href="./wishlist.html">My Wishlist</a></p>
 
-<p>🔔 <a href="#notifications" id="notificationLink">My Notifications</a></p>
+<p>
+🔔 <a href="#notifications" id="notificationLink">
+My Notifications
+</a>
+</p>
 
 <p>📍 My Addresses</p>
 
@@ -177,11 +196,11 @@ View Notifications
 
 <h3>Shopping</h3>
 
-<button onclick="location.href='index.html'">
+<button onclick="location.href='./index.html'">
 Continue Shopping
 </button>
 
-<button onclick="location.href='track.html'">
+<button onclick="location.href='./track.html'">
 Track My Order
 </button>
 
@@ -194,6 +213,13 @@ Logout
 
 </div>
 
+
+<!-- COMMON NAVIGATION SCRIPT -->
+
+<script src="./nav.js"></script>
+
+
+<!-- FIREBASE SCRIPT -->
 
 <script type="module">
 
@@ -246,7 +272,8 @@ onAuthStateChanged(auth, async function(user) {
 
     } else {
 
-        window.location.href = "customer-login.html";
+        window.location.href =
+        "./customer-login.html";
 
     }
 
@@ -289,6 +316,8 @@ async function loadNotifications() {
 
             notificationButton.innerText =
             "View Notifications";
+
+            notificationsLoaded = true;
 
             return;
 
@@ -348,7 +377,8 @@ async function loadNotifications() {
             : "Mark as Read";
 
 
-            readButton.disabled = data.read === true;
+            readButton.disabled =
+            data.read === true;
 
 
             readButton.onclick = async function() {
@@ -452,7 +482,9 @@ notificationButton.onclick = function() {
 // NOTIFICATION LINK
 
 document.getElementById("notificationLink").onclick =
-function() {
+function(e) {
+
+    e.preventDefault();
 
     notificationList.style.display = "block";
 
@@ -475,7 +507,7 @@ async function() {
         await signOut(auth);
 
         window.location.href =
-        "customer-login.html";
+        "./customer-login.html";
 
     } catch(error) {
 

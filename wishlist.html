@@ -6,12 +6,21 @@
 <title>PMPS GOLD - Wishlist</title>
 
 <style>
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #fffdf7;
     color: #333;
 }
+
+#siteNav {
+    width: 100%;
+}
+
 header {
     background: white;
     color: #b8860b;
@@ -20,11 +29,13 @@ header {
     font-weight: bold;
     box-shadow: 0 2px 8px #ddd;
 }
+
 .container {
     max-width: 600px;
     margin: auto;
     padding: 20px;
 }
+
 .product {
     background: white;
     padding: 16px;
@@ -32,11 +43,13 @@ header {
     border-radius: 12px;
     box-shadow: 0 2px 10px #ddd;
 }
+
 .product img {
     width: 100%;
     max-height: 220px;
     object-fit: contain;
 }
+
 button {
     width: 100%;
     padding: 12px;
@@ -46,30 +59,58 @@ button {
     border: none;
     border-radius: 8px;
     font-size: 15px;
+    cursor: pointer;
 }
+
+button:active {
+    transform: scale(.97);
+}
+
 .remove {
     background: #b22222;
+}
+
+.empty {
+    background: white;
+    padding: 20px;
+    text-align: center;
+    border-radius: 10px;
 }
 </style>
 </head>
 
 <body>
 
+<!-- COMMON NAVIGATION -->
+
+<div id="siteNav">
+    <p style="text-align:center;padding:15px;">
+        Loading Menu...
+    </p>
+</div>
+
 <header>PMPS GOLD</header>
 
 <div class="container">
+
     <h2>❤️ My Wishlist</h2>
 
     <div id="wishlist">Loading...</div>
 
-    <button onclick="location.href='index.html'">
+    <button onclick="location.href='./index.html'">
         Continue Shopping
     </button>
 
-    <button onclick="location.href='dashboard.html'">
+    <button onclick="location.href='./dashboard.html'">
         Back to Dashboard
     </button>
+
 </div>
+
+<!-- COMMON NAVIGATION SCRIPT -->
+
+<script src="./nav.js"></script>
+
 
 <script type="module">
 
@@ -86,81 +127,179 @@ import {
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
+
 const wishlistDiv = document.getElementById("wishlist");
+
+
+// LOAD WISHLIST
 
 async function loadWishlist(user) {
 
     wishlistDiv.textContent = "Loading...";
 
     try {
+
         const wishlistRef = collection(
-            db, "Customers", user.uid, "Wishlist"
+            db,
+            "Customers",
+            user.uid,
+            "Wishlist"
         );
 
         const snapshot = await getDocs(wishlistRef);
 
         wishlistDiv.innerHTML = "";
 
+
         if (snapshot.empty) {
-            wishlistDiv.textContent = "Your Wishlist is empty.";
+
+            wishlistDiv.innerHTML = `
+                <div class="empty">
+                    <h3>❤️ Your Wishlist is Empty</h3>
+                    <p>Add your favourite jewellery here.</p>
+                </div>
+            `;
+
             return;
+
         }
+
 
         snapshot.forEach(function(item) {
 
             const data = item.data();
 
             const card = document.createElement("div");
+
             card.className = "product";
 
+
+            // PRODUCT IMAGE
+
             if (data.image) {
+
                 const img = document.createElement("img");
+
                 img.src = data.image;
+
                 img.alt = data.name || "Jewellery";
+
+                img.loading = "lazy";
+
                 card.appendChild(img);
+
             }
 
+
+            // PRODUCT NAME
+
             const name = document.createElement("h3");
+
             name.textContent = data.name || "Product";
+
             card.appendChild(name);
 
+
+            // PRODUCT PRICE
+
             const price = document.createElement("p");
-            price.textContent = "Price: ₹" + (data.price || 0);
+
+            price.textContent =
+                "Price: ₹" + (data.price || 0);
+
             card.appendChild(price);
 
-            const removeBtn = document.createElement("button");
-            removeBtn.className = "remove";
-            removeBtn.textContent = "Remove from Wishlist";
 
-            removeBtn.onclick = async function() {
-                try {
-                    await deleteDoc(doc(
-                        db, "Customers", user.uid,
-                        "Wishlist", item.id
-                    ));
+            // VIEW PRODUCT
 
-                    loadWishlist(user);
-                } catch(error) {
-                    alert("Remove Error: " + error.message);
-                }
+            const viewBtn = document.createElement("button");
+
+            viewBtn.textContent = "View Product";
+
+            viewBtn.onclick = function() {
+
+                window.location.href =
+                    "./product-details.html?id=" +
+                    encodeURIComponent(item.id);
+
             };
 
+            card.appendChild(viewBtn);
+
+
+            // REMOVE PRODUCT
+
+            const removeBtn = document.createElement("button");
+
+            removeBtn.className = "remove";
+
+            removeBtn.textContent = "Remove from Wishlist";
+
+
+            removeBtn.onclick = async function() {
+
+                if (!confirm("Remove this product from Wishlist?")) {
+                    return;
+                }
+
+                try {
+
+                    await deleteDoc(
+
+                        doc(
+                            db,
+                            "Customers",
+                            user.uid,
+                            "Wishlist",
+                            item.id
+                        )
+
+                    );
+
+                    await loadWishlist(user);
+
+                } catch(error) {
+
+                    alert("Remove Error: " + error.message);
+
+                }
+
+            };
+
+
             card.appendChild(removeBtn);
+
             wishlistDiv.appendChild(card);
+
         });
 
+
     } catch(error) {
-        wishlistDiv.textContent = "Error: " + error.message;
+
+        console.error(error);
+
+        wishlistDiv.textContent =
+            "Error: " + error.message;
+
     }
+
 }
 
+
+// CUSTOMER AUTHENTICATION
+
 onAuthStateChanged(auth, function(user) {
+
     if (!user) {
-        window.location.href = "customer-login.html";
+
+        window.location.href = "./customer-login.html";
+
         return;
+
     }
 
     loadWishlist(user);
+
 });
 
 </script>

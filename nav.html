@@ -1,0 +1,105 @@
+<style>
+.pmps-navigation {
+    background: #b8860b;
+    padding: 12px;
+    font-family: Arial, sans-serif;
+}
+
+.pmps-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.pmps-brand {
+    color: white;
+    font-size: 21px;
+    font-weight: bold;
+}
+
+.pmps-actions {
+    display: flex;
+    gap: 7px;
+}
+
+.pmps-actions button {
+    border: none;
+    background: white;
+    color: #9b7200;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.pmps-links {
+    display: none;
+    flex-direction: column;
+    margin-top: 12px;
+}
+
+.pmps-links.show {
+    display: flex;
+}
+
+.pmps-links a {
+    color: white;
+    text-decoration: none;
+    padding: 12px;
+    border-top: 1px solid rgba(255,255,255,.25);
+    font-weight: bold;
+}
+
+@media(min-width:700px) {
+    .pmps-links {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+
+    .pmps-links a {
+        border: none;
+        padding: 10px;
+    }
+}
+</style>
+
+<div class="pmps-navigation">
+
+    <div class="pmps-topbar">
+
+        <div class="pmps-brand">PMPS GOLD</div>
+
+        <div class="pmps-actions">
+
+            <button data-nav-action="home">🏠</button>
+
+            <button data-nav-action="back">←</button>
+
+            <button data-nav-action="cart">🛒</button>
+
+            <button data-nav-action="menu">☰</button>
+
+        </div>
+
+    </div>
+
+    <div class="pmps-links" id="pmpsLinks">
+
+        <a href="./index.html">🏠 Home</a>
+        <a href="./index.html#categories">💎 Categories</a>
+        <a href="./index.html#products">🛍️ Products</a>
+        <a href="./cart.html">🛒 Cart</a>
+        <a href="./checkout.html">💳 Checkout</a>
+        <a href="./track.html">📦 Track Order</a>
+        <a href="./my-orders.html">📋 My Orders</a>
+        <a href="./dashboard.html">👤 Dashboard</a>
+        <a href="./wishlist.html">❤️ Wishlist</a>
+        <a href="./profile.html">⚙️ Profile</a>
+        <a href="./admin.html">🔐 Admin</a>
+
+    </div>
+
+</div>

@@ -6,12 +6,21 @@
 <title>PMPS GOLD - My Profile</title>
 
 <style>
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #fffdf7;
     color: #333;
 }
+
+#siteNav {
+    width: 100%;
+}
+
 header {
     background: white;
     color: #b8860b;
@@ -19,32 +28,39 @@ header {
     font-size: 24px;
     font-weight: bold;
 }
+
 .container {
     max-width: 500px;
     margin: 25px auto;
     padding: 20px;
 }
+
 .card {
     background: white;
     padding: 22px;
     border-radius: 12px;
     box-shadow: 0 2px 10px #ddd;
 }
-h2 { color: #b8860b; }
+
+h2 {
+    color: #b8860b;
+}
+
 label {
     display: block;
     margin-top: 15px;
     font-weight: bold;
 }
+
 input, textarea {
     width: 100%;
-    box-sizing: border-box;
     padding: 13px;
     margin-top: 7px;
     border: 1px solid #ddd;
     border-radius: 8px;
     font-size: 16px;
 }
+
 button {
     width: 100%;
     padding: 14px;
@@ -54,45 +70,82 @@ button {
     border: none;
     border-radius: 8px;
     font-size: 16px;
+    cursor: pointer;
 }
-#message { color: green; }
+
+button:active {
+    transform: scale(.98);
+}
+
+#message {
+    color: green;
+    overflow-wrap: anywhere;
+}
 </style>
 </head>
 
 <body>
 
+<!-- COMMON NAVIGATION -->
+
+<div id="siteNav">
+    <p style="text-align:center;padding:15px;">
+        Loading Menu...
+    </p>
+</div>
+
 <header>PMPS GOLD</header>
 
 <div class="container">
-<div class="card">
 
-<h2>My Profile</h2>
+    <div class="card">
 
-<p>Mobile Number</p>
-<b id="mobile">Loading...</b>
+        <h2>My Profile</h2>
 
-<label>Full Name</label>
-<input id="name" type="text" placeholder="Enter your name">
+        <p>Mobile Number</p>
+        <b id="mobile">Loading...</b>
 
-<label>Delivery Address</label>
-<textarea id="address" rows="3"
-placeholder="Enter your full address"></textarea>
+        <label>Full Name</label>
+        <input
+            id="name"
+            type="text"
+            placeholder="Enter your name"
+        >
 
-<label>PIN Code</label>
-<input id="pin" type="text"
-inputmode="numeric" maxlength="6"
-placeholder="Enter PIN code">
+        <label>Delivery Address</label>
+        <textarea
+            id="address"
+            rows="3"
+            placeholder="Enter your full address"
+        ></textarea>
 
-<button id="saveBtn">Save Profile</button>
+        <label>PIN Code</label>
+        <input
+            id="pin"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="Enter PIN code"
+        >
 
-<p id="message"></p>
+        <button id="saveBtn">
+            Save Profile
+        </button>
 
-<button onclick="location.href='dashboard.html'">
-Back to Dashboard
-</button>
+        <p id="message"></p>
+
+        <button onclick="location.href='./dashboard.html'">
+            Back to Dashboard
+        </button>
+
+    </div>
 
 </div>
-</div>
+
+<!-- COMMON NAVIGATION SCRIPT -->
+
+<script src="./nav.js"></script>
+
 
 <script type="module">
 
@@ -108,18 +161,28 @@ import {
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
+
 const nameInput = document.getElementById("name");
+
 const addressInput = document.getElementById("address");
+
 const pinInput = document.getElementById("pin");
+
 const message = document.getElementById("message");
 
 let currentUser = null;
 
+
+// CHECK LOGIN AND LOAD PROFILE
+
 onAuthStateChanged(auth, async function(user) {
 
     if (!user) {
-        window.location.href = "customer-login.html";
+
+        window.location.href = "./customer-login.html";
+
         return;
+
     }
 
     currentUser = user;
@@ -127,54 +190,94 @@ onAuthStateChanged(auth, async function(user) {
     document.getElementById("mobile").textContent =
         user.phoneNumber || "Unavailable";
 
+
     try {
-        const profileRef = doc(db, "Customers", user.uid);
+
+        const profileRef = doc(
+            db,
+            "Customers",
+            user.uid
+        );
+
         const profileSnap = await getDoc(profileRef);
 
+
         if (profileSnap.exists()) {
+
             const data = profileSnap.data();
 
             nameInput.value = data.name || "";
+
             addressInput.value = data.address || "";
+
             pinInput.value = data.pin || "";
+
         }
 
     } catch(error) {
-        message.textContent = "Load Error: " + error.message;
+
+        message.textContent =
+            "Load Error: " + error.message;
+
     }
+
 });
+
+
+// SAVE PROFILE
 
 document.getElementById("saveBtn").onclick = async function() {
 
     if (!currentUser) return;
 
+
     const name = nameInput.value.trim();
+
     const address = addressInput.value.trim();
+
     const pin = pinInput.value.trim();
 
+
     if (!name || !address || !/^\d{6}$/.test(pin)) {
+
         message.textContent =
             "Enter name, address and valid 6 digit PIN.";
+
         return;
+
     }
+
 
     try {
 
         await setDoc(
-            doc(db, "Customers", currentUser.uid),
+
+            doc(
+                db,
+                "Customers",
+                currentUser.uid
+            ),
+
             {
                 name: name,
                 address: address,
                 pin: pin,
                 mobile: currentUser.phoneNumber || ""
             }
+
         );
 
-        message.textContent = "Profile Saved Successfully!";
+
+        message.textContent =
+            "Profile Saved Successfully!";
 
     } catch(error) {
-        message.textContent = "Save Error: " + error.message;
+
+        message.textContent =
+            "Save Error: " + error.message;
+
     }
+
 };
 
 </script>

@@ -20,7 +20,7 @@ body {
 
 header {
     background: white;
-    padding: 18px;
+    padding: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -28,7 +28,7 @@ header {
 }
 
 .logo {
-    font-size: 25px;
+    font-size: 23px;
     font-weight: bold;
     color: #b8860b;
 }
@@ -41,17 +41,10 @@ header {
     border-radius: 8px;
 }
 
-nav {
-    background: #b8860b;
-    padding: 13px;
-    text-align: center;
-}
+/* COMMON NAVIGATION */
 
-nav a {
-    color: white;
-    text-decoration: none;
-    margin: 0 10px;
-    font-weight: bold;
+#siteNav {
+    width: 100%;
 }
 
 .hero {
@@ -183,47 +176,37 @@ footer {
     border-radius: 50px;
     text-decoration: none;
     font-weight: bold;
+    z-index: 10;
 }
-
-/* BUTTON ANIMATION */
 
 button {
     cursor: pointer;
-    transition:
-        background-color 0.25s ease,
-        transform 0.15s ease,
-        box-shadow 0.2s ease;
+    transition: background-color .25s ease,
+                transform .15s ease,
+                box-shadow .2s ease;
 }
 
 button:active {
-    transform: scale(0.92);
-    filter: brightness(0.80);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    transform: scale(.92);
+    filter: brightness(.80);
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
 }
 
 button.clicked {
-    animation: buttonClick 0.3s ease;
+    animation: buttonClick .3s ease;
 }
 
 @keyframes buttonClick {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(0.92);
-    }
-
-    100% {
-        transform: scale(1);
-    }
+    0% { transform: scale(1); }
+    50% { transform: scale(.92); }
+    100% { transform: scale(1); }
 }
 
 .button:active,
 .cart:active,
 .whatsapp:active {
-    transform: scale(0.94);
-    filter: brightness(0.80);
+    transform: scale(.94);
+    filter: brightness(.80);
 }
 
 @media(max-width:350px) {
@@ -237,41 +220,68 @@ button.clicked {
 <body>
 
 <header>
+
     <div class="logo">PMPS GOLD</div>
 
     <button class="cart"
     onclick="window.location.href='./cart.html'">
-    🛒 Cart: <span id="count">0</span>
+
+        🛒 Cart: <span id="count">0</span>
+
     </button>
+
 </header>
 
-<nav>
-    <a href="#home">Home</a>
-    <a href="#categories">Categories</a>
-    <a href="#products">Products</a>
-    <a href="./track.html">📦 Track Order</a>
-</nav>
+<!-- COMMON NAVIGATION MENU -->
+
+<div id="siteNav">
+    <p style="text-align:center;padding:15px;">
+        Loading Menu...
+    </p>
+</div>
 
 <section class="hero" id="home">
+
     <h1>Welcome to PMPS GOLD</h1>
+
     <p>Discover Premium Artificial Jewellery</p>
+
     <p>Retail & Wholesale Available</p>
+
     <a href="#products" class="button">Shop Now</a>
+
 </section>
 
 <h2 id="categories">Shop By Category</h2>
 
 <div class="categories">
-    <button class="category" data-category="All">🌟<br>All</button>
-    <button class="category" data-category="Earrings">💎<br>Earrings</button>
-    <button class="category" data-category="Necklace">📿<br>Necklace</button>
-    <button class="category" data-category="Rings">💍<br>Rings</button>
-    <button class="category" data-category="Bangles">✨<br>Bangles</button>
+
+    <button class="category" data-category="All">
+        🌟<br>All
+    </button>
+
+    <button class="category" data-category="Earrings">
+        💎<br>Earrings
+    </button>
+
+    <button class="category" data-category="Necklace">
+        📿<br>Necklace
+    </button>
+
+    <button class="category" data-category="Rings">
+        💍<br>Rings
+    </button>
+
+    <button class="category" data-category="Bangles">
+        ✨<br>Bangles
+    </button>
+
 </div>
 
 <h2 id="products">Featured Products</h2>
 
 <div style="padding:15px;">
+
     <input
         type="text"
         id="searchInput"
@@ -285,6 +295,7 @@ button.clicked {
             outline:none;
         "
     >
+
 </div>
 
 <p id="status">Loading Products...</p>
@@ -292,18 +303,31 @@ button.clicked {
 <div class="products" id="productList"></div>
 
 <footer>
+
     <h3>PMPS GOLD</h3>
+
     <p>Premium Artificial Jewellery</p>
+
     <p>Retail & Wholesale Available</p>
+
     <p>WhatsApp: +91 7699377496</p>
+
     <p>© 2026 PMPS GOLD</p>
+
 </footer>
 
 <a class="whatsapp"
 href="https://wa.me/917699377496"
-target="_blank">
-WhatsApp
+target="_blank"
+rel="noopener">
+
+    WhatsApp
+
 </a>
+
+<!-- LOAD COMMON NAVIGATION -->
+
+<script src="./nav.js"></script>
 
 <script type="module">
 
@@ -334,7 +358,7 @@ function updateCart() {
 
     document.getElementById("count").innerText =
         cart.reduce(
-            (sum, item) => sum + Number(item.quantity || 0),
+            (sum,item) => sum + Number(item.quantity || 0),
             0
         );
 
@@ -356,7 +380,6 @@ function addCart(product) {
     if (existing) {
 
         existing.quantity++;
-
         existing.price = retailPrice;
 
     } else {
@@ -364,15 +387,10 @@ function addCart(product) {
         cart.push({
 
             productId: product.id,
-
             name: product.name,
-
             price: retailPrice,
-
             quantity: 1,
-
             orderType: "retail",
-
             moq: 1
 
         });
@@ -445,7 +463,7 @@ async function buyNow(product) {
 
 // ADD TO WISHLIST
 
-async function addWishlist(id, name, price, image) {
+async function addWishlist(id,name,price,image) {
 
     const user = auth.currentUser;
 
@@ -462,17 +480,13 @@ async function addWishlist(id, name, price, image) {
     try {
 
         await setDoc(
-            doc(db, "Customers", user.uid, "Wishlist", id),
+            doc(db,"Customers",user.uid,"Wishlist",id),
             {
 
                 productId: id,
-
                 name: name,
-
                 price: price,
-
                 image: image,
-
                 addedAt: serverTimestamp()
 
             }
@@ -480,7 +494,7 @@ async function addWishlist(id, name, price, image) {
 
         alert(name + " Added to Wishlist ❤️");
 
-    } catch (error) {
+    } catch(error) {
 
         alert("Wishlist Error: " + error.message);
 
@@ -504,6 +518,7 @@ document.getElementById("productList").addEventListener(
         const buyButton =
             event.target.closest(".buy-button");
 
+
         if (cartButton) {
 
             addCart({
@@ -520,6 +535,7 @@ document.getElementById("productList").addEventListener(
 
         }
 
+
         if (buyButton) {
 
             buyNow({
@@ -535,6 +551,7 @@ document.getElementById("productList").addEventListener(
             });
 
         }
+
 
         if (wishButton) {
 
@@ -562,7 +579,8 @@ document.querySelector(".categories").addEventListener(
     "click",
     function(event) {
 
-        const button = event.target.closest("[data-category]");
+        const button =
+            event.target.closest("[data-category]");
 
         if (!button) return;
 
@@ -579,7 +597,9 @@ document.querySelector(".categories").addEventListener(
         products.forEach(product => {
 
             const category =
-                (product.dataset.category || "").trim().toLowerCase();
+                (product.dataset.category || "")
+                .trim()
+                .toLowerCase();
 
             const match =
                 selectedCategory === "all" ||
@@ -605,7 +625,7 @@ document.querySelector(".categories").addEventListener(
 const searchInput =
     document.getElementById("searchInput");
 
-searchInput.addEventListener("input", function() {
+searchInput.addEventListener("input",function() {
 
     const searchText =
         this.value.trim().toLowerCase();
@@ -618,9 +638,11 @@ searchInput.addEventListener("input", function() {
     products.forEach(product => {
 
         const productName =
-            product.querySelector("h3").textContent.toLowerCase();
+            product.querySelector("h3")
+            .textContent.toLowerCase();
 
-        const match = productName.includes(searchText);
+        const match =
+            productName.includes(searchText);
 
         product.style.display = match ? "" : "none";
 
@@ -640,14 +662,16 @@ searchInput.addEventListener("input", function() {
 
 async function loadProducts() {
 
-    const list = document.getElementById("productList");
+    const list =
+        document.getElementById("productList");
 
-    const status = document.getElementById("status");
+    const status =
+        document.getElementById("status");
 
     try {
 
         const snapshot =
-            await getDocs(collection(db, "Products"));
+            await getDocs(collection(db,"Products"));
 
         list.innerHTML = "";
 
@@ -699,8 +723,6 @@ async function loadProducts() {
             buttons.className = "product-buttons";
 
 
-            // ADD TO CART
-
             const cartButton = document.createElement("button");
 
             cartButton.className = "add-button";
@@ -719,8 +741,6 @@ async function loadProducts() {
                 product.retailPrice || product.price || 0;
 
 
-            // BUY NOW
-
             const buyButton = document.createElement("button");
 
             buyButton.className = "buy-button";
@@ -738,8 +758,6 @@ async function loadProducts() {
             buyButton.dataset.retail =
                 product.retailPrice || product.price || 0;
 
-
-            // WISHLIST
 
             const wishButton = document.createElement("button");
 
@@ -768,7 +786,7 @@ async function loadProducts() {
 
             card.style.cursor = "pointer";
 
-            card.addEventListener("click", function(event) {
+            card.addEventListener("click",function(event) {
 
                 if (event.target.closest("button")) return;
 
@@ -792,7 +810,7 @@ async function loadProducts() {
 
         status.innerText = "";
 
-    } catch (error) {
+    } catch(error) {
 
         status.innerText =
             "Error Loading Products: " + error.message;
@@ -804,7 +822,7 @@ async function loadProducts() {
 
 // BUTTON ANIMATION
 
-document.addEventListener("click", function(event) {
+document.addEventListener("click",function(event) {
 
     const button = event.target.closest("button");
 

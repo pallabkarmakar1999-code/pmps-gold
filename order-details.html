@@ -6,12 +6,21 @@
 <title>PMPS GOLD - Invoice</title>
 
 <style>
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #fffdf7;
     color: #333;
 }
+
+#siteNav {
+    width: 100%;
+}
+
 header {
     padding: 20px;
     background: white;
@@ -19,36 +28,45 @@ header {
     font-size: 24px;
     font-weight: bold;
 }
+
 .container {
     max-width: 650px;
     margin: 20px auto;
     padding: 15px;
 }
+
 .invoice {
     background: white;
     padding: 22px;
     border-radius: 12px;
     box-shadow: 0 2px 10px #ddd;
+    overflow-x: auto;
 }
+
 h2, h3 {
     color: #b8860b;
 }
+
 table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
 }
+
 th, td {
     padding: 10px 5px;
     border-bottom: 1px solid #ddd;
     text-align: left;
+    overflow-wrap: anywhere;
 }
+
 .total {
     text-align: right;
     font-size: 21px;
     font-weight: bold;
     color: #b8860b;
 }
+
 button {
     width: 100%;
     padding: 14px;
@@ -58,27 +76,78 @@ button {
     border: none;
     border-radius: 8px;
     font-size: 16px;
+    cursor: pointer;
+}
+
+@media print {
+
+    #siteNav,
+    header,
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+    }
+
+    .container {
+        margin: 0;
+        padding: 0;
+        max-width: 100%;
+    }
+
+    .invoice {
+        box-shadow: none;
+        border-radius: 0;
+    }
+
 }
 </style>
 </head>
 
 <body>
 
+<!-- COMMON NAVIGATION -->
+
+<div id="siteNav">
+    <p style="text-align:center;padding:15px;">
+        Loading Menu...
+    </p>
+</div>
+
 <header>PMPS GOLD</header>
 
 <div class="container">
-<div class="invoice" id="invoice">
-    <h2>Order Invoice</h2>
-    <p id="message">Loading Order Details...</p>
-    <div id="details"></div>
+
+    <div class="invoice" id="invoice">
+
+        <h2>Order Invoice</h2>
+
+        <p id="message">Loading Order Details...</p>
+
+        <div id="details"></div>
+
+    </div>
+
+    <div class="no-print">
+
+        <button onclick="window.print()">
+            Print / Save as PDF
+        </button>
+
+        <button onclick="location.href='./my-orders.html'">
+            Back to My Orders
+        </button>
+
+    </div>
+
 </div>
 
-<button onclick="window.print()">Print / Save as PDF</button>
+<!-- COMMON NAVIGATION SCRIPT -->
 
-<button onclick="location.href='my-orders.html'">
-Back to My Orders
-</button>
-</div>
+<script src="./nav.js"></script>
+
 
 <script type="module">
 
@@ -93,107 +162,228 @@ import {
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
+
 const message = document.getElementById("message");
+
 const details = document.getElementById("details");
 
+
 function addText(parent, tag, text) {
+
     const element = document.createElement(tag);
+
     element.textContent = text;
+
     parent.appendChild(element);
+
     return element;
+
 }
+
+
+// CHECK LOGIN
 
 onAuthStateChanged(auth, async function(user) {
 
     if (!user) {
-        window.location.href = "customer-login.html";
+
+        window.location.href = "./customer-login.html";
+
         return;
+
     }
+
 
     const orderId = new URLSearchParams(
         window.location.search
     ).get("id");
 
+
     if (!orderId) {
+
         message.textContent = "Order ID missing.";
+
         return;
+
     }
 
+
     try {
+
         const orderRef = doc(db, "Orders", orderId);
+
         const orderSnap = await getDoc(orderRef);
 
+
         if (!orderSnap.exists()) {
+
             message.textContent = "Order not found.";
+
             return;
+
         }
+
 
         const order = orderSnap.data();
 
+
+        // CUSTOMER ORDER ACCESS PROTECTION
+
         if (order.userId !== user.uid) {
-            message.textContent = "You cannot access this order.";
+
+            message.textContent =
+                "You cannot access this order.";
+
             return;
+
         }
+
 
         message.textContent = "";
 
+
+        // CUSTOMER DETAILS
+
         addText(details, "p", "Order ID: " + orderSnap.id);
-        addText(details, "p", "Customer: " + (order.customerName || ""));
-        addText(details, "p", "Mobile: " + (order.mobile || ""));
-        addText(details, "p", "Address: " + (order.address || ""));
-        addText(details, "p", "PIN: " + (order.pin || ""));
-        addText(details, "p", "Payment: " + (order.paymentMethod || ""));
-        addText(details, "p", "Order Type: " + (order.orderType || ""));
-        addText(details, "p", "Status: " + (order.status || "Pending"));
+
+        addText(
+            details,
+            "p",
+            "Customer: " + (order.customerName || "")
+        );
+
+        addText(
+            details,
+            "p",
+            "Mobile: " + (order.mobile || "")
+        );
+
+        addText(
+            details,
+            "p",
+            "Address: " + (order.address || "")
+        );
+
+        addText(
+            details,
+            "p",
+            "PIN: " + (order.pin || "")
+        );
+
+        addText(
+            details,
+            "p",
+            "Payment: " + (order.paymentMethod || "")
+        );
+
+        addText(
+            details,
+            "p",
+            "Order Type: " + (order.orderType || "")
+        );
+
+        addText(
+            details,
+            "p",
+            "Status: " + (order.status || "Pending")
+        );
+
+
+        // ORDER DATE
 
         const date = order.createdAt?.toDate
             ? order.createdAt.toDate().toLocaleString()
             : "Date unavailable";
 
+
         addText(details, "p", "Order Date: " + date);
+
+
+        // PRODUCT TABLE
 
         addText(details, "h3", "Products");
 
+
         const table = document.createElement("table");
+
         const heading = document.createElement("tr");
 
-        ["Product", "Price", "Qty", "Total"].forEach(function(item) {
-            addText(heading, "th", item);
-        });
+
+        ["Product", "Price", "Qty", "Total"].forEach(
+            function(item) {
+
+                addText(heading, "th", item);
+
+            }
+        );
+
 
         table.appendChild(heading);
 
+
         (order.products || []).forEach(function(product) {
+
             const row = document.createElement("tr");
+
             const price = Number(product.price) || 0;
+
             const quantity = Number(product.quantity) || 1;
 
+
             [
+
                 product.name || "Product",
+
                 "₹" + price,
+
                 quantity,
+
                 "₹" + (price * quantity)
+
             ].forEach(function(value) {
+
                 addText(row, "td", String(value));
+
             });
 
+
             table.appendChild(row);
+
         });
+
 
         details.appendChild(table);
 
+
+        // GRAND TOTAL
+
         const total = document.createElement("p");
+
         total.className = "total";
-        total.textContent = "Grand Total: ₹" +
+
+        total.textContent =
+            "Grand Total: ₹" +
             (Number(order.totalAmount) || 0);
+
 
         details.appendChild(total);
 
-        addText(details, "h3", "Thank You for Shopping with PMPS GOLD!");
+
+        // THANK YOU MESSAGE
+
+        addText(
+            details,
+            "h3",
+            "Thank You for Shopping with PMPS GOLD!"
+        );
+
 
     } catch(error) {
+
         message.textContent = "Error: " + error.message;
+
         console.error(error);
+
     }
 
 });

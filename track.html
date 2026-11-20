@@ -18,6 +18,10 @@ body {
     color: #333;
 }
 
+#siteNav {
+    width: 100%;
+}
+
 header {
     background: white;
     color: #b8860b;
@@ -100,6 +104,14 @@ button:disabled {
 
 <body>
 
+<!-- COMMON NAVIGATION -->
+
+<div id="siteNav">
+    <p style="text-align:center;padding:15px;">
+        Loading Menu...
+    </p>
+</div>
+
 <header>PMPS GOLD</header>
 
 <div class="container">
@@ -126,11 +138,16 @@ Track Order
 
 </div>
 
-<a href="index.html" class="back">
+<a href="./index.html" class="back">
 ← Back to Home
 </a>
 
 </div>
+
+<!-- COMMON NAVIGATION SCRIPT -->
+
+<script src="./nav.js"></script>
+
 
 <script type="module">
 
@@ -147,10 +164,15 @@ import {
 
 
 const orderInput = document.getElementById("orderId");
+
 const result = document.getElementById("result");
+
 const trackButton = document.getElementById("trackButton");
 
 let currentUser = null;
+
+
+// AUTHENTICATION
 
 const userReady = new Promise(resolve => {
 
@@ -177,18 +199,24 @@ const userReady = new Promise(resolve => {
 });
 
 
+// SAFE TEXT
+
 function safe(value) {
 
     return String(value ?? "").replace(/[&<>"']/g, char => ({
+
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
         '"': "&quot;",
         "'": "&#039;"
+
     })[char]);
 
 }
 
+
+// TRACK ORDER
 
 window.trackOrder = async function() {
 
@@ -197,33 +225,38 @@ window.trackOrder = async function() {
     if (!id) {
 
         result.innerHTML = "Please enter Order ID.";
+
         return;
 
     }
 
     trackButton.disabled = true;
+
     trackButton.innerText = "Searching...";
 
     result.innerHTML = "";
+
 
     try {
 
         await userReady;
 
+
         if (!currentUser) {
 
-            result.innerHTML =
-                "Please Login First!";
+            result.innerHTML = "Please Login First!";
 
-            window.location.href = "customer-login.html";
+            window.location.href = "./customer-login.html";
 
             return;
 
         }
 
+
         const orderRef = doc(db, "Orders", id);
 
         const orderSnap = await getDoc(orderRef);
+
 
         if (!orderSnap.exists()) {
 
@@ -234,14 +267,18 @@ window.trackOrder = async function() {
 
         }
 
+
         const order = orderSnap.data();
 
-        // Check order ownership
-        // Firestore Security Rules also enforce this.
+
+        // ORDER OWNERSHIP VERIFICATION
 
         if (
+
             order.userId !== currentUser.uid &&
+
             currentUser.uid !== "k1iqKlSU1pYk16SNnWfajy7EdIw2"
+
         ) {
 
             result.innerHTML =
@@ -252,11 +289,18 @@ window.trackOrder = async function() {
         }
 
 
+        // PRODUCT DETAILS
+
         let productHTML = "";
+
 
         if (Array.isArray(order.products)) {
 
             order.products.forEach(item => {
+
+                const price = Number(item.price || 0);
+
+                const quantity = Number(item.quantity || 0);
 
                 productHTML += `
 
@@ -264,16 +308,21 @@ window.trackOrder = async function() {
 
                     <b>${safe(item.name)}</b>
 
-                    <p>Order Type: ${safe(item.orderType)}</p>
+                    <p>
+                    Order Type: ${safe(item.orderType)}
+                    </p>
 
-                    <p>Price: ₹${safe(item.price)}</p>
+                    <p>
+                    Price: ₹${price}
+                    </p>
 
-                    <p>Quantity: ${safe(item.quantity)}</p>
+                    <p>
+                    Quantity: ${quantity}
+                    </p>
 
-                    <p>Subtotal: ₹${
-                        Number(item.price || 0) *
-                        Number(item.quantity || 0)
-                    }</p>
+                    <p>
+                    Subtotal: ₹${price * quantity}
+                    </p>
 
                 </div>
 
@@ -284,20 +333,30 @@ window.trackOrder = async function() {
         }
 
 
+        // DISPLAY ORDER
+
         result.innerHTML = `
 
             <h3>✅ Order Details</h3>
 
-            <p><b>Order ID:</b> ${safe(id)}</p>
+            <p>
+            <b>Order ID:</b> ${safe(id)}
+            </p>
 
-            <p><b>Customer:</b>
-            ${safe(order.customerName)}</p>
+            <p>
+            <b>Customer:</b>
+            ${safe(order.customerName)}
+            </p>
 
-            <p><b>Mobile:</b>
-            ${safe(order.mobile)}</p>
+            <p>
+            <b>Mobile:</b>
+            ${safe(order.mobile)}
+            </p>
 
-            <p><b>Payment:</b>
-            ${safe(order.paymentMethod)}</p>
+            <p>
+            <b>Payment:</b>
+            ${safe(order.paymentMethod)}
+            </p>
 
             <hr>
 
@@ -328,6 +387,7 @@ window.trackOrder = async function() {
     } finally {
 
         trackButton.disabled = false;
+
         trackButton.innerText = "Track Order";
 
     }
@@ -335,8 +395,22 @@ window.trackOrder = async function() {
 };
 
 
+// BUTTON CLICK
+
 trackButton.addEventListener("click", window.trackOrder);
 
+
+// ENTER KEY SUPPORT
+
+orderInput.addEventListener("keydown", function(event) {
+
+    if (event.key === "Enter") {
+
+        window.trackOrder();
+
+    }
+
+});
 
 </script>
 
