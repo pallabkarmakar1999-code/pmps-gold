@@ -51,6 +51,34 @@ header {
     font-size: 18px;
 }
 
+.product-item {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    border: 1px solid #eee;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 10px;
+}
+
+.product-img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #f5f5f5;
+    flex-shrink: 0;
+}
+
+.product-info {
+    flex: 1;
+}
+
+.product-info p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
 button {
     padding: 12px;
     width: 100%;
@@ -73,12 +101,17 @@ button:active {
     border-radius: 10px;
     text-align: center;
 }
+
+.order-total {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
 </style>
 </head>
 
 <body>
-
-<!-- COMMON NAVIGATION -->
 
 <div id="siteNav">
     <p style="text-align:center;padding:15px;">
@@ -100,10 +133,7 @@ Back to Dashboard
 
 </div>
 
-<!-- COMMON NAVIGATION SCRIPT -->
-
 <script src="./nav.js"></script>
-
 
 <script type="module">
 
@@ -124,7 +154,18 @@ import {
 const ordersDiv = document.getElementById("orders");
 
 
-// CUSTOMER AUTHENTICATION
+function getImage(product) {
+
+    return product.imageUrl ||
+           product.image ||
+           product.photo ||
+           product.img ||
+           product.productImage ||
+           (product.images && product.images[0]) ||
+           "";
+
+}
+
 
 onAuthStateChanged(auth, async function(user) {
 
@@ -140,11 +181,8 @@ onAuthStateChanged(auth, async function(user) {
     try {
 
         const q = query(
-
             collection(db, "Orders"),
-
             where("userId", "==", user.uid)
-
         );
 
 
@@ -185,45 +223,132 @@ onAuthStateChanged(auth, async function(user) {
             card.className = "order";
 
 
+            // ORDER ID
+
             const title = document.createElement("h3");
 
-            title.textContent =
-            "Order ID: " + orderDoc.id;
+            title.textContent = "Order ID: " + orderDoc.id;
 
 
-            const product = document.createElement("p");
+            // PRODUCTS CONTAINER
 
-            product.textContent =
-            "Products: " +
-            (order.products || [])
-            .map(p => p.name)
-            .join(", ");
+            const productsDiv = document.createElement("div");
 
+
+            const products = order.products || [];
+
+
+            products.forEach(function(p) {
+
+                const itemDiv = document.createElement("div");
+
+                itemDiv.className = "product-item";
+
+
+                // PRODUCT IMAGE
+
+                const img = document.createElement("img");
+
+                img.className = "product-img";
+
+                img.src = getImage(p);
+
+                img.alt = p.name || "Product";
+
+                img.onerror = function() {
+
+                    img.style.display = "none";
+
+                };
+
+
+                // PRODUCT DETAILS
+
+                const info = document.createElement("div");
+
+                info.className = "product-info";
+
+
+                const name = document.createElement("h4");
+
+                name.textContent = p.name || "Product";
+
+
+                const price = document.createElement("p");
+
+                price.textContent =
+                    "Price: ₹" + (p.price || 0);
+
+
+                const quantity = document.createElement("p");
+
+                quantity.textContent =
+                    "Quantity: " + (p.quantity || 1);
+
+
+                const type = document.createElement("p");
+
+                type.textContent =
+                    "Type: " +
+                    (p.orderType === "wholesale"
+                    ? "Wholesale"
+                    : "Retail");
+
+
+                info.append(
+                    name,
+                    price,
+                    quantity,
+                    type
+                );
+
+
+                itemDiv.append(
+                    img,
+                    info
+                );
+
+
+                productsDiv.appendChild(itemDiv);
+
+            });
+
+
+            // TOTAL
 
             const total = document.createElement("p");
 
-            total.textContent =
-            "Total: ₹" + (order.totalAmount || 0);
+            total.className = "order-total";
 
+            total.textContent =
+                "Total Amount: ₹" +
+                (order.totalAmount || 0);
+
+
+            // DATE
 
             const orderDate = document.createElement("p");
 
             orderDate.textContent =
-            "Date: " + date;
+                "Date: " + date;
 
+
+            // STATUS
 
             const status = document.createElement("p");
 
             status.className = "status";
 
             status.textContent =
-            "Status: " + (order.status || "Pending");
+                "Status: " + (order.status || "Pending");
 
+
+            // DETAILS BUTTON
 
             const invoiceBtn = document.createElement("button");
 
             invoiceBtn.textContent =
-            "View Order Details & Invoice";
+                "View Order Details & Invoice";
 
 
             invoiceBtn.onclick = function() {
@@ -236,14 +361,12 @@ onAuthStateChanged(auth, async function(user) {
 
 
             card.append(
-
                 title,
-                product,
+                productsDiv,
                 total,
                 orderDate,
                 status,
                 invoiceBtn
-
             );
 
 

@@ -10,7 +10,7 @@
 
 body{
     margin:0;
-    font-family:Arial;
+    font-family:Arial,sans-serif;
     background:#fffdf8;
     color:#333;
 }
@@ -79,23 +79,7 @@ button{
     border-radius:8px;
     font-size:17px;
     font-weight:bold;
-    transition:transform .15s,background .2s;
     cursor:pointer;
-}
-
-button:active{
-    transform:scale(.94);
-    background:#128c4a;
-}
-
-button.clicked{
-    animation:buttonClick .3s ease;
-}
-
-@keyframes buttonClick{
-    0%{transform:scale(1)}
-    50%{transform:scale(.94)}
-    100%{transform:scale(1)}
 }
 
 button:disabled{background:#999}
@@ -129,17 +113,33 @@ button:disabled{background:#999}
     font-size:13px;
     color:#666;
 }
+
+.product-image{
+    width:100%;
+    max-width:180px;
+    height:180px;
+    object-fit:contain;
+    background:#fff;
+    border-radius:8px;
+    display:block;
+    margin:0 auto 12px;
+}
+
+.address-box{
+    background:#fffaf0;
+    padding:12px;
+    border:1px solid #e5d5a5;
+    border-radius:8px;
+    margin-bottom:15px;
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- COMMON NAVIGATION -->
-
 <div id="siteNav">
-    <p style="text-align:center;padding:15px;">
-        Loading Menu...
-    </p>
+<p style="text-align:center;padding:15px;">Loading Menu...</p>
 </div>
 
 <header>PMPS GOLD</header>
@@ -154,9 +154,24 @@ button:disabled{background:#999}
 
 <form id="orderForm">
 
+<div class="address-box">
+
+<h3>📍 My Saved Addresses</h3>
+
+<label>Select Saved Address</label>
+
+<select id="savedAddresses">
+<option value="">Use a new address</option>
+</select>
+
+<p class="small" id="addressMessage">
+Your saved addresses will appear here.
+</p>
+
+</div>
+
 <label>Full Name</label>
-<input type="text" id="name"
-placeholder="Enter your name" required>
+<input type="text" id="name" placeholder="Enter your name" required>
 
 <label>Mobile Number</label>
 <input type="tel" id="mobile"
@@ -165,9 +180,7 @@ pattern="[6-9][0-9]{9}"
 maxlength="10" required>
 
 <label>Full Address</label>
-<textarea id="address"
-placeholder="Enter delivery address"
-required></textarea>
+<textarea id="address" placeholder="Enter delivery address" required></textarea>
 
 <label>PIN Code</label>
 <input type="text" id="pin"
@@ -210,8 +223,6 @@ Place Order via WhatsApp
 
 </div>
 
-<!-- COMMON NAVIGATION SCRIPT -->
-
 <script src="./nav.js"></script>
 
 <script type="module">
@@ -223,7 +234,8 @@ collection,
 addDoc,
 serverTimestamp,
 doc,
-getDoc
+getDoc,
+setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 import {
@@ -236,25 +248,30 @@ const totalSpan=document.getElementById("total");
 const orderForm=document.getElementById("orderForm");
 const placeOrderButton=document.getElementById("placeOrder");
 
+const nameInput=document.getElementById("name");
+const mobileInput=document.getElementById("mobile");
+const addressInput=document.getElementById("address");
+const pinInput=document.getElementById("pin");
+const savedAddressesSelect=document.getElementById("savedAddresses");
+const addressMessage=document.getElementById("addressMessage");
+
 let currentUser=null;
 let total=0;
+let savedAddresses=[];
 
-
-// AUTHENTICATION
 
 const userReady=new Promise(resolve=>{
 
 onAuthStateChanged(auth,user=>{
 
 currentUser=user;
+
 resolve(user);
 
 });
 
 });
 
-
-// BUY NOW OR CART
 
 const buyNowData=localStorage.getItem("pmps_buy_now");
 
@@ -279,17 +296,13 @@ cart=[];
 
 }else{
 
-cart=JSON.parse(
-localStorage.getItem("pmps_cart")||"[]"
-);
+cart=JSON.parse(localStorage.getItem("pmps_cart")||"[]");
 
 document.getElementById("checkoutMode").innerText=
 "🛒 Cart Checkout";
 
 }
 
-
-// SAFE HTML TEXT
 
 function escapeHTML(value){
 
@@ -306,17 +319,191 @@ return String(value||"").replace(/[&<>"']/g,char=>({
 }
 
 
-// LOAD LATEST PRODUCT PRICES
+// IMAGE URL HELPER
+
+function getProductImage(item){
+
+return item.imageUrl
+||item.image
+||item.photo
+||item.img
+||item.productImage
+||item.images?.[0]
+||"";
+
+}
+
+
+// LOAD SAVED ADDRESSES
+
+async function loadSavedAddresses(){
+
+if(!currentUser)return;
+
+try{
+
+const customerRef=doc(db,"Customers",currentUser.uid);
+
+const customerSnap=await getDoc(customerRef);
+
+savedAddressesSelect.innerHTML=
+'<option value="">Use a new address</option>';
+
+if(customerSnap.exists()){
+
+const customerData=customerSnap.data();
+
+savedAddresses=Array.isArray(customerData.addresses)
+?customerData.addresses:[ ];
+
+savedAddresses.forEach((item,index)=>{
+
+const option=document.createElement("option");
+
+option.value=String(index);
+
+option.textContent=
+(item.label||"Address "+(index+1))
++" - "+(item.address||"")
++" ("+(item.pin||"")+")";
+
+savedAddressesSelect.appendChild(option);
+
+});
+
+}
+
+addressMessage.innerText=savedAddresses.length
+?"Select an address to fill the form automatically."
+:"No saved addresses yet. Your first order address will be saved.";
+
+}
+
+catch(error){
+
+console.error("Address loading error:",error);
+
+addressMessage.innerText="Could not load saved addresses.";
+
+}
+
+}
+
+
+// SELECT SAVED ADDRESS
+
+savedAddressesSelect.addEventListener("change",function(){
+
+const index=this.value;
+
+if(index===""){
+
+nameInput.value="";
+mobileInput.value="";
+addressInput.value="";
+pinInput.value="";
+
+return;
+
+}
+
+const selected=savedAddresses[Number(index)];
+
+if(!selected)return;
+
+nameInput.value=selected.name||"";
+mobileInput.value=selected.mobile||"";
+addressInput.value=selected.address||"";
+pinInput.value=selected.pin||"";
+
+});
+
+
+// SAVE ADDRESS TO CUSTOMER PROFILE
+
+async function saveCustomerAddress(addressData){
+
+const customerRef=doc(db,"Customers",currentUser.uid);
+
+const customerSnap=await getDoc(customerRef);
+
+let addresses=[];
+
+if(customerSnap.exists()){
+
+const customerData=customerSnap.data();
+
+addresses=Array.isArray(customerData.addresses)
+?customerData.addresses:[ ];
+
+}
+
+// CHECK DUPLICATE ADDRESS
+
+const duplicate=addresses.some(item=>
+
+String(item.mobile||"")===addressData.mobile
+&&
+String(item.address||"").trim().toLowerCase()
+===addressData.address.trim().toLowerCase()
+&&
+String(item.pin||"")===addressData.pin
+
+);
+
+if(!duplicate){
+
+addresses.push({
+
+label:"Address "+(addresses.length+1),
+
+name:addressData.name,
+
+mobile:addressData.mobile,
+
+address:addressData.address,
+
+pin:addressData.pin,
+
+savedAt:new Date().toISOString()
+
+});
+
+}
+
+// MERGE: EXISTING CUSTOMER DATA WILL BE PRESERVED
+
+await setDoc(
+
+customerRef,
+
+{
+
+addresses:addresses
+
+},
+
+{merge:true}
+
+);
+
+savedAddresses=addresses;
+
+}
+
+
+// LOAD LATEST PRODUCT DETAILS
 
 async function loadProducts(){
 
 for(let item of cart){
 
-item.productId=item.productId||"";
+item.productId=item.productId||item.id||"";
 item.name=item.name||"Product";
 item.quantity=Number(item.quantity)||1;
 item.orderType=(item.orderType||"retail").toLowerCase();
 item.moq=Number(item.moq)||1;
+
 
 if(item.productId){
 
@@ -331,6 +518,15 @@ if(productSnap.exists()){
 const product=productSnap.data();
 
 item.name=product.name||item.name;
+
+item.imageUrl=
+product.imageUrl
+||product.image
+||product.photo
+||product.img
+||product.productImage
+||product.images?.[0]
+||getProductImage(item);
 
 item.retailPrice=Number(
 product.retailPrice||product.price||0
@@ -348,13 +544,17 @@ item.price=item.orderType==="wholesale"
 
 }
 
-}catch(error){
+}
+
+catch(error){
 
 console.error("Product loading error:",error);
 
 }
 
 }
+
+item.imageUrl=getProductImage(item);
 
 }
 
@@ -379,6 +579,12 @@ total+=amount;
 html+=`
 
 <div class="product-box">
+
+${item.imageUrl
+?`<img class="product-image"
+src="${escapeHTML(item.imageUrl)}"
+alt="${escapeHTML(item.name)}">`
+:""}
 
 <b>${escapeHTML(item.name)}</b>
 
@@ -413,9 +619,7 @@ data-index="${index}"
 min="${item.orderType==="wholesale"?item.moq:1}"
 value="${item.quantity}">
 
-<p>
-<b>Subtotal: ₹${amount}</b>
-</p>
+<p><b>Subtotal: ₹${amount}</b></p>
 
 </div>
 
@@ -454,19 +658,13 @@ if(item.orderType==="wholesale"){
 
 item.price=item.wholesalePrice;
 
-item.quantity=Math.max(
-item.quantity,
-item.moq
-);
+item.quantity=Math.max(item.quantity,item.moq);
 
 }else{
 
 item.price=item.retailPrice;
 
-item.quantity=Math.max(
-1,
-item.quantity
-);
+item.quantity=Math.max(1,item.quantity);
 
 }
 
@@ -481,8 +679,7 @@ const item=cart[index];
 
 let quantity=Number(e.target.value);
 
-const minimum=
-item.orderType==="wholesale"?item.moq:1;
+const minimum=item.orderType==="wholesale"?item.moq:1;
 
 if(!Number.isInteger(quantity)||quantity<minimum){
 
@@ -501,25 +698,15 @@ showSummary();
 });
 
 
-// INITIAL LOAD
-
-loadProducts();
-
-
-// VALIDATE CART
-
 function validateCart(){
 
 for(const item of cart){
 
-const minimum=
-item.orderType==="wholesale"?item.moq:1;
+const minimum=item.orderType==="wholesale"?item.moq:1;
 
 if(!Number.isInteger(item.quantity)||item.quantity<minimum){
 
-alert(
-item.name+" এর Minimum Quantity হলো "+minimum
-);
+alert(item.name+" এর Minimum Quantity হলো "+minimum);
 
 return false;
 
@@ -569,13 +756,13 @@ return;
 }
 
 
-const name=document.getElementById("name").value.trim();
+const name=nameInput.value.trim();
 
-const mobile=document.getElementById("mobile").value.trim();
+const mobile=mobileInput.value.trim();
 
-const address=document.getElementById("address").value.trim();
+const address=addressInput.value.trim();
 
-const pin=document.getElementById("pin").value.trim();
+const pin=pinInput.value.trim();
 
 const payment=document.getElementById("payment").value;
 
@@ -604,8 +791,52 @@ placeOrderButton.innerText="Please Wait...";
 
 try{
 
+// SAVE CUSTOMER ADDRESS FIRST
+
+await saveCustomerAddress({
+
+name:name,
+
+mobile:mobile,
+
+address:address,
+
+pin:pin
+
+});
+
+
+// SAVE IMAGE AND PRODUCT DETAILS IN ORDER
+
+const orderProducts=cart.map(item=>({
+
+productId:item.productId||"",
+
+name:item.name||"Product",
+
+imageUrl:getProductImage(item),
+
+price:Number(item.price)||0,
+
+retailPrice:Number(item.retailPrice)||0,
+
+wholesalePrice:Number(item.wholesalePrice)||0,
+
+orderType:item.orderType||"retail",
+
+quantity:Number(item.quantity)||1,
+
+moq:Number(item.moq)||1,
+
+subtotal:(Number(item.price)||0)*(Number(item.quantity)||1)
+
+}));
+
+
 const orderRef=await addDoc(
+
 collection(db,"Orders"),
+
 {
 
 userId:currentUser.uid,
@@ -618,7 +849,7 @@ address:address,
 
 pin:pin,
 
-products:cart,
+products:orderProducts,
 
 totalAmount:total,
 
@@ -629,6 +860,7 @@ status:"Pending",
 createdAt:serverTimestamp()
 
 }
+
 );
 
 
@@ -649,7 +881,7 @@ message+="Payment: "+payment+"\n\n";
 message+="PRODUCT DETAILS:\n";
 
 
-cart.forEach(item=>{
+orderProducts.forEach(item=>{
 
 message+="\nProduct: "+item.name;
 
@@ -659,10 +891,9 @@ message+="\nPrice: ₹"+item.price;
 
 message+="\nQuantity: "+item.quantity;
 
-message+="\nMOQ: "+item.moq;
+message+="\nSubtotal: ₹"+item.subtotal+"\n";
 
-message+="\nSubtotal: ₹"+
-(item.price*item.quantity)+"\n";
+message+="\nImage: "+item.imageUrl+"\n";
 
 });
 
@@ -672,7 +903,7 @@ message+="\nTOTAL: ₹"+total;
 message+="\n\nPlease confirm my order.";
 
 
-alert("Order Saved Successfully!");
+alert("Order Saved Successfully! Your address has also been saved.");
 
 
 if(isBuyNow){
@@ -693,18 +924,40 @@ window.location.href=
 +encodedMessage;
 
 
-}catch(error){
+}
+
+catch(error){
+
+console.error(error);
 
 alert("Order Save Failed: "+error.message);
 
 placeOrderButton.disabled=false;
 
-placeOrderButton.innerText=
-"Place Order via WhatsApp";
+placeOrderButton.innerText="Place Order via WhatsApp";
 
 }
 
 });
+
+
+// INITIALIZE CHECKOUT
+
+async function initializeCheckout(){
+
+await userReady;
+
+if(currentUser){
+
+await loadSavedAddresses();
+
+}
+
+await loadProducts();
+
+}
+
+initializeCheckout();
 
 
 // BUTTON ANIMATION
