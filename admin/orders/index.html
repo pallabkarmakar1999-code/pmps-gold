@@ -3,9 +3,190 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PMPS GOLD Orders</title>
+<title>PMPS GOLD - Orders</title>
+<link rel="stylesheet" href="../../assets/css/admin.css">
+
+<style>
+body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:15px}
+h2{color:#a77b00}
+.order{background:white;padding:15px;margin:15px 0;border-radius:10px;box-shadow:0 2px 7px #ddd}
+.order img{width:65px;height:65px;object-fit:cover;border-radius:7px}
+.item{display:flex;align-items:center;gap:12px;margin:10px 0}
+select,button{padding:10px;border-radius:6px;border:1px solid #ccc;margin:5px 0}
+button{background:#b8860b;color:white;border:0;font-weight:bold}
+.status{font-weight:bold;color:#2875bd}
+</style>
 </head>
+
 <body>
-<h1>Customer Orders Management</h1>
+
+<h2>🛒 Customer Orders Management</h2>
+<a href="../dashboard.html">← Back to Dashboard</a>
+
+<div>
+<select id="filter">
+<option value="all">All Orders</option>
+<option value="Pending">Pending</option>
+<option value="Confirmed">Confirmed</option>
+<option value="Processing">Processing</option>
+<option value="Shipped">Shipped</option>
+<option value="Delivered">Delivered</option>
+<option value="Cancelled">Cancelled</option>
+</select>
+<button id="refreshBtn">Refresh Orders</button>
+</div>
+
+<p id="message">Loading Orders...</p>
+<div id="ordersList"></div>
+
+<script type="module">
+import {db,auth} from "../../firebase.js";
+
+import {
+ collection,getDocs,doc,updateDoc,query,orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+ onAuthStateChanged,signOut
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const ADMIN_UID="k1iqKlSU1pYk16SNnWfajy7EdIw2";
+let allOrders=[];
+
+const $=id=>document.getElementById(id);
+
+onAuthStateChanged(auth,user=>{
+ if(!user || user.uid!==ADMIN_UID){
+  signOut(auth);
+  window.location.replace("../index.html");
+  return;
+ }
+ loadOrders();
+});
+
+$("refreshBtn").onclick=loadOrders;
+$("filter").onchange=renderOrders;
+
+async function loadOrders(){
+ $("message").innerText="Loading Orders...";
+ $("ordersList").innerHTML="";
+
+ try{
+  const q=query(collection(db,"Orders"),orderBy("createdAt","desc"));
+  const snapshot=await getDocs(q);
+
+  allOrders=snapshot.docs.map(d=>({
+   id:d.id,...d.data()
+  }));
+
+  $("message").innerText="Total Orders: "+allOrders.length;
+  renderOrders();
+
+ }catch(error){
+  $("message").innerText="Error: "+error.message;
+ }
+}
+
+function renderOrders(){
+ const filter=$("filter").value;
+ const list=$("ordersList");
+ list.innerHTML="";
+
+ const orders=allOrders.filter(o=>
+  filter==="all" || (o.status||"Pending")===filter
+ );
+
+ if(!orders.length){
+  list.innerText="কোনো Order পাওয়া যায়নি।";
+  return;
+ }
+
+ orders.forEach(o=>{
+  const box=document.createElement("div");
+  box.className="order";
+
+  const heading=document.createElement("h3");
+  heading.textContent="Order ID: "+o.id;
+
+  const customer=document.createElement("p");
+  customer.textContent="Customer: "+(o.customerName||o.name||"N/A");
+
+  const phone=document.createElement("p");
+  phone.textContent="Phone: "+(o.phone||o.mobile||"N/A");
+
+  const address=document.createElement("p");
+  address.textContent="Address: "+(o.address||"N/A");
+
+  const total=document.createElement("h3");
+  total.textContent="Total: ₹"+(o.totalAmount??o.total??0);
+
+  const status=document.createElement("p");
+  status.className="status";
+  status.textContent="Current Status: "+(o.status||"Pending");
+
+  const products=document.createElement("div");
+  const items=Array.isArray(o.products)?o.products:[];
+
+  items.forEach(p=>{
+   const row=document.createElement("div");
+   row.className="item";
+
+   const img=document.createElement("img");
+   img.src=p.image||p.imageUrl||"";
+   img.alt=p.name||"Product";
+
+   const info=document.createElement("span");
+   info.textContent=(p.name||"Product")+
+    " | Qty: "+(p.quantity||1)+
+    " | Price: ₹"+(p.price||0);
+
+   row.append(img,info);
+   products.append(row);
+  });
+
+  const select=document.createElement("select");
+
+  ["Pending","Confirmed","Processing","Shipped","Delivered","Cancelled"]
+  .forEach(s=>{
+   const option=document.createElement("option");
+   option.value=s;
+   option.textContent=s;
+   if((o.status||"Pending")===s)option.selected=true;
+   select.append(option);
+  });
+
+  const update=document.createElement("button");
+  update.textContent="UPDATE STATUS";
+  update.onclick=()=>updateStatus(o.id,select.value,update);
+
+  box.append(
+   heading,customer,phone,address,products,total,status,select,update
+  );
+
+  list.append(box);
+ });
+}
+
+async function updateStatus(id,newStatus,button){
+ button.disabled=true;
+ button.textContent="Updating...";
+
+ try{
+  await updateDoc(doc(db,"Orders",id),{
+   status:newStatus
+  });
+
+  alert("Order Status Update হয়েছে!");
+  await loadOrders();
+
+ }catch(error){
+  alert("Error: "+error.message);
+ }finally{
+  button.disabled=false;
+  button.textContent="UPDATE STATUS";
+ }
+}
+</script>
+
 </body>
 </html>
