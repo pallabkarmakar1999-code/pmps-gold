@@ -3,9 +3,210 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PMPS GOLD Products</title>
+<title>PMPS GOLD - Products</title>
+<link rel="stylesheet" href="../../assets/css/admin.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:15px}
+h2{color:#a77b00}
+.box{background:white;padding:18px;border-radius:10px;margin-bottom:20px}
+input,textarea,button{width:100%;padding:12px;margin:7px 0;box-sizing:border-box}
+input,textarea{border:1px solid #ccc;border-radius:6px}
+button{border:0;border-radius:6px;background:#b8860b;color:white;font-weight:bold}
+.product{background:white;padding:12px;margin:12px 0;border-radius:8px;display:flex;gap:12px;align-items:center}
+.product img{width:85px;height:85px;object-fit:cover;border-radius:7px}
+.product-info{flex:1;min-width:0}
+.delete{background:#c62828}
+.edit{background:#2875bd}
+.small-btn{width:auto;padding:8px 12px;margin-right:5px}
+</style>
 </head>
 <body>
-<h1>Products Management</h1>
+
+<h2>📦 Products Management</h2>
+<a href="../dashboard.html">← Back to Dashboard</a>
+
+<div class="box">
+<h3 id="formTitle">নতুন Product যোগ করুন</h3>
+
+<input id="name" placeholder="Product Name">
+<input id="price" type="number" placeholder="Retail Price">
+<input id="wholesalePrice" type="number" placeholder="Wholesale Price">
+<input id="moq" type="number" placeholder="Minimum Order Quantity (MOQ)">
+<input id="category" placeholder="Category">
+<input id="stock" type="number" placeholder="Stock Quantity">
+<input id="image" placeholder="Product Image URL">
+<textarea id="description" placeholder="Product Description"></textarea>
+
+<button id="saveBtn">SAVE PRODUCT</button>
+<button id="cancelBtn" style="display:none;background:#666">CANCEL EDIT</button>
+<p id="message"></p>
+</div>
+
+<h3>আপনার Products</h3>
+<div id="productList">Loading...</div>
+
+<script type="module">
+import {db,auth} from "../../firebase.js";
+
+import {
+ collection,addDoc,getDocs,doc,updateDoc,deleteDoc,serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+ onAuthStateChanged,signOut
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const ADMIN_UID="k1iqKlSU1pYk16SNnWfajy7EdIw2";
+
+const fields=["name","price","wholesalePrice","moq","category","stock","image","description"];
+let editingId=null;
+
+const $=id=>document.getElementById(id);
+
+onAuthStateChanged(auth,user=>{
+ if(!user || user.uid!==ADMIN_UID){
+  signOut(auth);
+  window.location.replace("../index.html");
+  return;
+ }
+ loadProducts();
+});
+
+function getFormData(){
+ return {
+  name:$("name").value.trim(),
+  price:Number($("price").value)||0,
+  retailPrice:Number($("price").value)||0,
+  wholesalePrice:Number($("wholesalePrice").value)||0,
+  moq:Number($("moq").value)||1,
+  category:$("category").value.trim(),
+  stock:Number($("stock").value)||0,
+  image:$("image").value.trim(),
+  description:$("description").value.trim()
+ };
+}
+
+function clearForm(){
+ fields.forEach(id=>$(id).value="");
+ editingId=null;
+ $("formTitle").innerText="নতুন Product যোগ করুন";
+ $("saveBtn").innerText="SAVE PRODUCT";
+ $("cancelBtn").style.display="none";
+}
+
+$("cancelBtn").onclick=clearForm;
+
+$("saveBtn").onclick=async()=>{
+ const data=getFormData();
+
+ if(!data.name || !data.price){
+  $("message").innerText="Product Name এবং Retail Price দিন।";
+  return;
+ }
+
+ $("saveBtn").disabled=true;
+ $("message").innerText="Saving...";
+
+ try{
+  if(editingId){
+   await updateDoc(doc(db,"Products",editingId),data);
+   $("message").innerText="Product Update হয়েছে।";
+  }else{
+   data.createdAt=serverTimestamp();
+   await addDoc(collection(db,"Products"),data);
+   $("message").innerText="নতুন Product যোগ হয়েছে।";
+  }
+
+  clearForm();
+  await loadProducts();
+
+ }catch(error){
+  $("message").innerText="Error: "+error.message;
+ }finally{
+  $("saveBtn").disabled=false;
+ }
+};
+
+async function loadProducts(){
+ $("productList").innerText="Loading...";
+
+ try{
+  const snapshot=await getDocs(collection(db,"Products"));
+  $("productList").innerHTML="";
+
+  if(snapshot.empty){
+   $("productList").innerText="এখনও কোনো Product নেই।";
+   return;
+  }
+
+  snapshot.forEach(item=>{
+   const p=item.data();
+   const div=document.createElement("div");
+   div.className="product";
+
+   const img=document.createElement("img");
+   img.src=p.image||p.imageUrl||"";
+   img.alt=p.name||"Product";
+
+   const info=document.createElement("div");
+   info.className="product-info";
+
+   const title=document.createElement("strong");
+   title.textContent=p.name||"Unnamed Product";
+
+   const details=document.createElement("p");
+   details.textContent="Retail: ₹"+(p.retailPrice??p.price??0)+
+    " | Wholesale: ₹"+(p.wholesalePrice??0)+
+    " | Stock: "+(p.stock??0);
+
+   const edit=document.createElement("button");
+   edit.className="small-btn edit";
+   edit.textContent="EDIT";
+   edit.onclick=()=>editProduct(item.id,p);
+
+   const remove=document.createElement("button");
+   remove.className="small-btn delete";
+   remove.textContent="DELETE";
+   remove.onclick=()=>removeProduct(item.id);
+
+   info.append(title,details,edit,remove);
+   div.append(img,info);
+   $("productList").append(div);
+  });
+
+ }catch(error){
+  $("productList").innerText="Error: "+error.message;
+ }
+}
+
+function editProduct(id,p){
+ editingId=id;
+ $("name").value=p.name||"";
+ $("price").value=p.retailPrice??p.price??"";
+ $("wholesalePrice").value=p.wholesalePrice??"";
+ $("moq").value=p.moq??1;
+ $("category").value=p.category||"";
+ $("stock").value=p.stock??0;
+ $("image").value=p.image||p.imageUrl||"";
+ $("description").value=p.description||"";
+
+ $("formTitle").innerText="Product Edit করুন";
+ $("saveBtn").innerText="UPDATE PRODUCT";
+ $("cancelBtn").style.display="block";
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+
+async function removeProduct(id){
+ if(!confirm("এই Product মুছে ফেলতে চান?"))return;
+
+ try{
+  await deleteDoc(doc(db,"Products",id));
+  alert("Product মুছে ফেলা হয়েছে।");
+  await loadProducts();
+ }catch(error){
+  alert("Error: "+error.message);
+ }
+}
+</script>
 </body>
 </html>
