@@ -3,9 +3,145 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PMPS GOLD Customers</title>
+<title>PMPS GOLD - Customer Management</title>
+<link rel="stylesheet" href="../../assets/css/admin.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:15px}
+h2{color:#a77b00}
+.box{background:white;padding:15px;border-radius:10px;margin:15px 0}
+input{width:100%;padding:12px;box-sizing:border-box;border:1px solid #ccc;border-radius:6px}
+table{width:100%;border-collapse:collapse;background:white}
+th,td{padding:10px;border:1px solid #ddd;text-align:left;font-size:13px}
+th{background:#b8860b;color:white}
+.table-wrap{overflow-x:auto}
+.status{color:green;font-weight:bold}
+</style>
 </head>
 <body>
-<h1>Customer Management</h1>
+
+<h2>👥 Customer Management</h2>
+<a href="../dashboard.html">← Back to Dashboard</a>
+
+<div class="box">
+<h3>Search Customers</h3>
+<input id="search" placeholder="নাম, ইমেল বা মোবাইল নম্বর লিখুন...">
+</div>
+
+<div class="box">
+<h3>Customer List</h3>
+<p id="message">Loading Customers...</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Email</th>
+<th>Mobile</th>
+<th>Customer ID</th>
+</tr>
+</thead>
+<tbody id="customerList"></tbody>
+</table>
+</div>
+</div>
+
+<script type="module">
+import {db,auth} from "../../firebase.js";
+
+import {
+ collection,getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+ onAuthStateChanged,signOut
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const ADMIN_UID="k1iqKlSU1pYk16SNnWfajy7EdIw2";
+
+let customers=[];
+
+const list=document.getElementById("customerList");
+const message=document.getElementById("message");
+const search=document.getElementById("search");
+
+onAuthStateChanged(auth,async user=>{
+ if(!user || user.uid!==ADMIN_UID){
+  await signOut(auth);
+  window.location.replace("../index.html");
+  return;
+ }
+
+ loadCustomers();
+});
+
+async function loadCustomers(){
+ try{
+  message.innerText="Loading...";
+
+  const snapshot=await getDocs(collection(db,"Customers"));
+
+  customers=snapshot.docs.map(item=>({
+   id:item.id,
+   ...item.data()
+  }));
+
+  renderCustomers(customers);
+
+  message.innerText="Total Customers: "+customers.length;
+
+ }catch(error){
+  message.innerText="Error: "+error.message;
+ }
+}
+
+function renderCustomers(data){
+ list.innerHTML="";
+
+ if(data.length===0){
+  list.innerHTML="<tr><td colspan='4'>কোনো Customer পাওয়া যায়নি।</td></tr>";
+  return;
+ }
+
+ data.forEach(customer=>{
+  const name=customer.name||customer.fullName||"N/A";
+  const email=customer.email||"N/A";
+  const mobile=customer.phone||customer.mobile||customer.phoneNumber||"N/A";
+
+  const row=document.createElement("tr");
+
+  [name,email,mobile,customer.id].forEach(value=>{
+   const cell=document.createElement("td");
+   cell.textContent=value;
+   row.appendChild(cell);
+  });
+
+  list.appendChild(row);
+ });
+}
+
+search.addEventListener("input",()=>{
+ const query=search.value.toLowerCase();
+
+ const filtered=customers.filter(customer=>{
+  const values=[
+   customer.name,
+   customer.fullName,
+   customer.email,
+   customer.phone,
+   customer.mobile,
+   customer.phoneNumber,
+   customer.id
+  ];
+
+  return values.some(value=>
+   String(value||"").toLowerCase().includes(query)
+  );
+ });
+
+ renderCustomers(filtered);
+});
+</script>
+
 </body>
 </html>
