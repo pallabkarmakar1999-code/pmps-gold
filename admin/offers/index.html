@@ -3,9 +3,155 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PMPS GOLD Offers</title>
+<title>PMPS GOLD - Offers</title>
+<link rel="stylesheet" href="../../assets/css/admin.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:15px}
+h2{color:#a77b00}
+.box,.offer{background:white;padding:18px;border-radius:10px;margin:15px 0}
+input,textarea,button{width:100%;padding:12px;margin:7px 0;box-sizing:border-box}
+input,textarea{border:1px solid #ccc;border-radius:6px}
+button{border:0;border-radius:6px;background:#b8860b;color:white;font-weight:bold}
+.delete{background:#c62828}
+</style>
 </head>
 <body>
-<h1>Offers Management</h1>
+
+<h2>🎁 Offers Management</h2>
+<a href="../dashboard.html">← Back to Dashboard</a>
+
+<div class="box">
+<h3>নতুন Offer তৈরি করুন</h3>
+
+<input id="title" placeholder="Offer Title">
+<input id="code" placeholder="Coupon Code (যেমন PMPS10)">
+<input id="discount" type="number" placeholder="Discount Percentage">
+<input id="minOrder" type="number" placeholder="Minimum Order Amount">
+<input id="expiry" type="date">
+<textarea id="description" placeholder="Offer Description"></textarea>
+
+<button id="saveBtn">SAVE OFFER</button>
+<p id="message"></p>
+</div>
+
+<h3>বর্তমান Offers</h3>
+<div id="offerList">Loading...</div>
+
+<script type="module">
+import {db,auth} from "../../firebase.js";
+
+import {
+ collection,addDoc,getDocs,doc,deleteDoc,serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+ onAuthStateChanged,signOut
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const ADMIN_UID="k1iqKlSU1pYk16SNnWfajy7EdIw2";
+let adminReady=false;
+
+const $=id=>document.getElementById(id);
+
+onAuthStateChanged(auth,user=>{
+ if(!user || user.uid!==ADMIN_UID){
+  signOut(auth);
+  window.location.replace("../index.html");
+  return;
+ }
+ adminReady=true;
+ loadOffers();
+});
+
+$("saveBtn").onclick=async()=>{
+ if(!adminReady)return;
+
+ const title=$("title").value.trim();
+ const code=$("code").value.trim().toUpperCase();
+ const discount=Number($("discount").value);
+ const minOrder=Number($("minOrder").value)||0;
+ const expiry=$("expiry").value;
+ const description=$("description").value.trim();
+
+ if(!title || !code || discount<=0 || discount>100){
+  $("message").innerText="সঠিক Title, Coupon Code এবং Discount দিন।";
+  return;
+ }
+
+ $("saveBtn").disabled=true;
+ $("message").innerText="Saving...";
+
+ try{
+  await addDoc(collection(db,"Offers"),{
+   title,code,discount,minOrder,expiry,description,
+   active:true,
+   createdAt:serverTimestamp()
+  });
+
+  $("message").innerText="Offer সফলভাবে তৈরি হয়েছে!";
+
+  ["title","code","discount","minOrder","expiry","description"]
+   .forEach(id=>$(id).value="");
+
+  await loadOffers();
+
+ }catch(error){
+  $("message").innerText="Error: "+error.message;
+ }finally{
+  $("saveBtn").disabled=false;
+ }
+};
+
+async function loadOffers(){
+ $("offerList").innerText="Loading...";
+
+ try{
+  const snapshot=await getDocs(collection(db,"Offers"));
+  $("offerList").innerHTML="";
+
+  if(snapshot.empty){
+   $("offerList").innerText="এখনও কোনো Offer নেই।";
+   return;
+  }
+
+  snapshot.forEach(item=>{
+   const o=item.data();
+   const box=document.createElement("div");
+   box.className="offer";
+
+   const title=document.createElement("h3");
+   title.textContent=o.title||"Offer";
+
+   const details=document.createElement("p");
+   details.textContent="Coupon: "+(o.code||"")+
+    " | Discount: "+(o.discount||0)+"%"+
+    " | Minimum Order: ₹"+(o.minOrder||0)+
+    " | Expiry: "+(o.expiry||"N/A");
+
+   const description=document.createElement("p");
+   description.textContent=o.description||"";
+
+   const remove=document.createElement("button");
+   remove.className="delete";
+   remove.textContent="DELETE OFFER";
+   remove.onclick=async()=>{
+    if(!confirm("এই Offer মুছে ফেলতে চান?"))return;
+    try{
+     await deleteDoc(doc(db,"Offers",item.id));
+     await loadOffers();
+    }catch(error){
+     alert("Error: "+error.message);
+    }
+   };
+
+   box.append(title,details,description,remove);
+   $("offerList").append(box);
+  });
+
+ }catch(error){
+  $("offerList").innerText="Error: "+error.message;
+ }
+}
+</script>
 </body>
 </html>
