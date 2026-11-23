@@ -3,9 +3,203 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PMPS GOLD Banners</title>
+<title>PMPS GOLD - Banner Management</title>
+<link rel="stylesheet" href="../../assets/css/admin.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:15px}
+h2{color:#a77b00}
+.box,.banner{background:white;padding:18px;border-radius:10px;margin:15px 0}
+input,textarea,button{width:100%;padding:12px;margin:7px 0;box-sizing:border-box}
+input,textarea{border:1px solid #ccc;border-radius:6px}
+button{border:0;border-radius:6px;background:#b8860b;color:white;font-weight:bold}
+.delete{background:#c62828}
+.banner img{width:100%;max-height:180px;object-fit:cover;border-radius:8px}
+</style>
 </head>
 <body>
-<h1>Banner Management</h1>
+
+<h2>🖼️ Banner Management</h2>
+<a href="../dashboard.html">← Back to Dashboard</a>
+
+<div class="box">
+<h3>নতুন Homepage Banner যোগ করুন</h3>
+
+<input id="title" placeholder="Banner Title">
+<textarea id="description" placeholder="Banner Description"></textarea>
+
+<input id="imageFile" type="file" accept="image/*">
+<button id="uploadBtn">UPLOAD BANNER IMAGE</button>
+<p id="uploadMessage"></p>
+
+<input id="image" placeholder="Banner Image URL" readonly>
+<input id="buttonText" placeholder="Button Text (যেমন Shop Now)">
+<input id="buttonLink" placeholder="Button Link">
+
+<button id="saveBtn">SAVE BANNER</button>
+<p id="message"></p>
+</div>
+
+<h3>বর্তমান Banners</h3>
+<div id="bannerList">Loading...</div>
+
+<script type="module">
+import {db,auth} from "../../firebase.js";
+
+import {
+ collection,addDoc,getDocs,doc,deleteDoc,serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+ onAuthStateChanged,signOut
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const ADMIN_UID="k1iqKlSU1pYk16SNnWfajy7EdIw2";
+const CLOUD_NAME="nfmj1mny";
+const UPLOAD_PRESET="pmps_gold";
+
+let adminReady=false;
+const $=id=>document.getElementById(id);
+
+onAuthStateChanged(auth,user=>{
+ if(!user || user.uid!==ADMIN_UID){
+  signOut(auth);
+  window.location.replace("../index.html");
+  return;
+ }
+ adminReady=true;
+ loadBanners();
+});
+
+$("uploadBtn").onclick=async()=>{
+ if(!adminReady)return;
+
+ const file=$("imageFile").files[0];
+
+ if(!file){
+  $("uploadMessage").innerText="প্রথমে একটি ছবি নির্বাচন করুন।";
+  return;
+ }
+
+ if(!file.type.startsWith("image/") || file.size>10*1024*1024){
+  $("uploadMessage").innerText="সঠিক Image দিন (সর্বোচ্চ 10 MB)।";
+  return;
+ }
+
+ $("uploadBtn").disabled=true;
+ $("uploadMessage").innerText="Uploading...";
+
+ try{
+  const formData=new FormData();
+  formData.append("file",file);
+  formData.append("upload_preset",UPLOAD_PRESET);
+
+  const response=await fetch(
+   `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+   {method:"POST",body:formData}
+  );
+
+  const result=await response.json();
+
+  if(!response.ok)throw new Error(result.error?.message||"Upload failed");
+
+  $("image").value=result.secure_url;
+  $("uploadMessage").innerText="✅ Banner Image Upload সফল হয়েছে!";
+
+ }catch(error){
+  $("uploadMessage").innerText="Error: "+error.message;
+ }finally{
+  $("uploadBtn").disabled=false;
+ }
+};
+
+$("saveBtn").onclick=async()=>{
+ if(!adminReady)return;
+
+ const title=$("title").value.trim();
+ const description=$("description").value.trim();
+ const image=$("image").value.trim();
+ const buttonText=$("buttonText").value.trim();
+ const buttonLink=$("buttonLink").value.trim();
+
+ if(!title || !image){
+  $("message").innerText="Banner Title ও Image দিন।";
+  return;
+ }
+
+ $("saveBtn").disabled=true;
+ $("message").innerText="Saving...";
+
+ try{
+  await addDoc(collection(db,"Banners"),{
+   title,description,image,buttonText,buttonLink,
+   active:true,
+   createdAt:serverTimestamp()
+  });
+
+  $("message").innerText="Banner সফলভাবে Save হয়েছে!";
+
+  ["title","description","image","buttonText","buttonLink","imageFile"]
+   .forEach(id=>$(id).value="");
+
+  await loadBanners();
+
+ }catch(error){
+  $("message").innerText="Error: "+error.message;
+ }finally{
+  $("saveBtn").disabled=false;
+ }
+};
+
+async function loadBanners(){
+ $("bannerList").innerText="Loading...";
+
+ try{
+  const snapshot=await getDocs(collection(db,"Banners"));
+  $("bannerList").innerHTML="";
+
+  if(snapshot.empty){
+   $("bannerList").innerText="এখনও কোনো Banner নেই।";
+   return;
+  }
+
+  snapshot.forEach(item=>{
+   const b=item.data();
+   const box=document.createElement("div");
+   box.className="banner";
+
+   const img=document.createElement("img");
+   img.src=b.image||"";
+   img.alt=b.title||"Banner";
+
+   const title=document.createElement("h3");
+   title.textContent=b.title||"";
+
+   const desc=document.createElement("p");
+   desc.textContent=b.description||"";
+
+   const remove=document.createElement("button");
+   remove.className="delete";
+   remove.textContent="DELETE BANNER";
+
+   remove.onclick=async()=>{
+    if(!confirm("এই Banner মুছে ফেলতে চান?"))return;
+    try{
+     await deleteDoc(doc(db,"Banners",item.id));
+     await loadBanners();
+    }catch(error){
+     alert("Error: "+error.message);
+    }
+   };
+
+   box.append(img,title,desc,remove);
+   $("bannerList").append(box);
+  });
+
+ }catch(error){
+  $("bannerList").innerText="Error: "+error.message;
+ }
+}
+</script>
+
 </body>
 </html>
