@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PMPS GOLD - Products</title>
 <link rel="stylesheet" href="../../assets/css/admin.css">
+
 <style>
 body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:15px}
 h2{color:#a77b00}
@@ -18,8 +19,10 @@ button{border:0;border-radius:6px;background:#b8860b;color:white;font-weight:bol
 .delete{background:#c62828}
 .edit{background:#2875bd}
 .small-btn{width:auto;padding:8px 12px;margin-right:5px}
+#preview{max-width:130px;max-height:130px;display:none;margin:10px 0}
 </style>
 </head>
+
 <body>
 
 <h2>📦 Products Management</h2>
@@ -34,7 +37,14 @@ button{border:0;border-radius:6px;background:#b8860b;color:white;font-weight:bol
 <input id="moq" type="number" placeholder="Minimum Order Quantity (MOQ)">
 <input id="category" placeholder="Category">
 <input id="stock" type="number" placeholder="Stock Quantity">
-<input id="image" placeholder="Product Image URL">
+
+<h4>Product Image Upload</h4>
+<input id="imageFile" type="file" accept="image/*">
+<button type="button" id="uploadBtn">UPLOAD IMAGE</button>
+<p id="uploadMessage"></p>
+<img id="preview" alt="Image Preview">
+
+<input id="image" placeholder="Uploaded Image URL" readonly>
 <textarea id="description" placeholder="Product Description"></textarea>
 
 <button id="saveBtn">SAVE PRODUCT</button>
@@ -58,8 +68,12 @@ import {
 
 const ADMIN_UID="k1iqKlSU1pYk16SNnWfajy7EdIw2";
 
+const CLOUD_NAME="nfmj1mny";
+const UPLOAD_PRESET="pmps_gold";
+
 const fields=["name","price","wholesalePrice","moq","category","stock","image","description"];
 let editingId=null;
+let adminReady=false;
 
 const $=id=>document.getElementById(id);
 
@@ -69,8 +83,62 @@ onAuthStateChanged(auth,user=>{
   window.location.replace("../index.html");
   return;
  }
+ adminReady=true;
  loadProducts();
 });
+
+// ছবি Cloudinary-তে Upload
+$("uploadBtn").onclick=async()=>{
+ if(!adminReady)return;
+
+ const file=$("imageFile").files[0];
+
+ if(!file){
+  $("uploadMessage").innerText="প্রথমে একটি ছবি নির্বাচন করুন।";
+  return;
+ }
+
+ if(!file.type.startsWith("image/")){
+  $("uploadMessage").innerText="শুধু Image File নির্বাচন করুন।";
+  return;
+ }
+
+ if(file.size>10*1024*1024){
+  $("uploadMessage").innerText="ছবির সাইজ 10 MB-এর কম রাখুন।";
+  return;
+ }
+
+ $("uploadBtn").disabled=true;
+ $("uploadMessage").innerText="ছবি Upload হচ্ছে...";
+
+ try{
+  const formData=new FormData();
+  formData.append("file",file);
+  formData.append("upload_preset",UPLOAD_PRESET);
+
+  const response=await fetch(
+   `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+   {method:"POST",body:formData}
+  );
+
+  const result=await response.json();
+
+  if(!response.ok){
+   throw new Error(result.error?.message||"Upload Failed");
+  }
+
+  $("image").value=result.secure_url;
+  $("preview").src=result.secure_url;
+  $("preview").style.display="block";
+
+  $("uploadMessage").innerText="✅ Image Upload সফল হয়েছে!";
+
+ }catch(error){
+  $("uploadMessage").innerText="Upload Error: "+error.message;
+ }finally{
+  $("uploadBtn").disabled=false;
+ }
+};
 
 function getFormData(){
  return {
@@ -88,6 +156,9 @@ function getFormData(){
 
 function clearForm(){
  fields.forEach(id=>$(id).value="");
+ $("imageFile").value="";
+ $("preview").style.display="none";
+ $("uploadMessage").innerText="";
  editingId=null;
  $("formTitle").innerText="নতুন Product যোগ করুন";
  $("saveBtn").innerText="SAVE PRODUCT";
@@ -97,6 +168,8 @@ function clearForm(){
 $("cancelBtn").onclick=clearForm;
 
 $("saveBtn").onclick=async()=>{
+ if(!adminReady)return;
+
  const data=getFormData();
 
  if(!data.name || !data.price){
@@ -190,6 +263,11 @@ function editProduct(id,p){
  $("image").value=p.image||p.imageUrl||"";
  $("description").value=p.description||"";
 
+ if($("image").value){
+  $("preview").src=$("image").value;
+  $("preview").style.display="block";
+ }
+
  $("formTitle").innerText="Product Edit করুন";
  $("saveBtn").innerText="UPDATE PRODUCT";
  $("cancelBtn").style.display="block";
@@ -197,7 +275,7 @@ function editProduct(id,p){
 }
 
 async function removeProduct(id){
- if(!confirm("এই Product মুছে ফেলতে চান?"))return;
+ if(!adminReady || !confirm("এই Product মুছে ফেলতে চান?"))return;
 
  try{
   await deleteDoc(doc(db,"Products",id));
@@ -208,5 +286,6 @@ async function removeProduct(id){
  }
 }
 </script>
+
 </body>
 </html>
