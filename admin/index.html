@@ -1,9 +1,136 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 <head>
-<title>PMPS GOLD Admin</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMPS GOLD Admin Login</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    font-family:Arial,sans-serif;
+    background:#fffaf0;
+}
+.login-box{
+    width:100%;
+    max-width:400px;
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 3px 15px #ddd;
+}
+h2{text-align:center;color:#b8860b}
+input,button{
+    width:100%;
+    padding:14px;
+    margin:9px 0;
+    border-radius:7px;
+    font-size:16px;
+}
+input{border:1px solid #ccc}
+button{
+    border:0;
+    background:#b8860b;
+    color:white;
+    font-weight:bold;
+}
+#message{
+    text-align:center;
+    overflow-wrap:anywhere;
+}
+</style>
 </head>
+
 <body>
-<h1>PMPS GOLD ADMIN</h1>
+
+<div class="login-box">
+
+<h2>👑 PMPS GOLD</h2>
+<h3 style="text-align:center">ADMIN LOGIN</h3>
+
+<input id="email" type="email" placeholder="Admin Email">
+
+<input id="password" type="password" placeholder="Password">
+
+<button id="loginBtn">LOGIN</button>
+
+<p id="message"></p>
+
+</div>
+
+<script type="module">
+
+import {auth} from "../firebase.js";
+
+import {
+    signInWithEmailAndPassword,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const ADMIN_UID = "k1iqKlSU1pYk16SNnWfajy7EdIw2";
+
+const message = document.getElementById("message");
+const loginBtn = document.getElementById("loginBtn");
+
+onAuthStateChanged(auth, user => {
+
+    if(user && user.uid === ADMIN_UID){
+
+        window.location.replace("./dashboard.html");
+
+    }
+
+});
+
+loginBtn.onclick = async () => {
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    if(!email || !password){
+        message.innerText = "Email ও Password লিখুন।";
+        return;
+    }
+
+    loginBtn.disabled = true;
+    message.innerText = "Please wait...";
+
+    try{
+
+        const result = await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
+
+        if(result.user.uid !== ADMIN_UID){
+
+            message.innerText = "আপনার Admin Access নেই।";
+
+            return;
+        }
+
+        window.location.replace("./dashboard.html");
+
+    }catch(error){
+
+        message.innerText = error.message;
+
+    }finally{
+
+        loginBtn.disabled = false;
+
+    }
+
+};
+
+</script>
+
 </body>
 </html>
