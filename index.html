@@ -6,213 +6,67 @@
 <title>PMPS GOLD | Premium Jewellery</title>
 
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#fffdf8;color:#333}
+header{background:white;padding:15px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px #ddd;position:sticky;top:0;z-index:50}
+.logo{font-size:23px;font-weight:bold;color:#b8860b}
+.cart{background:#b8860b;color:white;padding:10px 15px;border:0;border-radius:8px}
+.hero{padding:50px 20px;text-align:center;background:linear-gradient(135deg,#fff1c2,#fff)}
+.hero h1{color:#9b7200;font-size:32px;margin-bottom:15px}
+.hero p{margin:10px 0}
+.button{display:inline-block;background:#b8860b;color:white;padding:12px 25px;border-radius:25px;text-decoration:none}
+h2.section-title{text-align:center;margin:30px 0 20px;color:#9b7200}
+.categories{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:15px;text-align:center}
+.category{background:white;padding:15px 5px;border-radius:10px;box-shadow:0 2px 8px #ddd;font-size:13px;color:#333;border:0}
+.products{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;padding:15px}
+.product{background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px #ddd;text-align:center;padding-bottom:15px}
+.product img{width:100%;height:160px;object-fit:contain;background:#fff1c2}
+.product h3{font-size:15px;margin:12px 5px}
+.price{color:#b8860b;font-weight:bold;margin:8px}
+.old-price{color:#888;text-decoration:line-through;font-size:12px;margin-left:6px}
+.product-buttons{padding:0 7px}
+.product button{width:95%;background:#b8860b;color:white;border:0;padding:10px 8px;border-radius:20px;margin:5px 0;font-size:13px}
+.product .buy-button{background:#e67e22}
+.product .wish-button{background:#d63384}
+#status{text-align:center;padding:15px}
+footer{background:#29231a;color:white;padding:30px;text-align:center;margin-top:30px;line-height:1.8}
+.whatsapp{position:fixed;bottom:20px;right:15px;background:#25D366;color:white;padding:14px;border-radius:50px;text-decoration:none;font-weight:bold;z-index:100}
+button{cursor:pointer;transition:transform .15s}
+button:active{transform:scale(.94)}
+
+#bannerSection{padding:12px 15px}
+.banner-card{min-height:180px;border-radius:14px;margin:10px 0;padding:25px 20px;background:linear-gradient(120deg,#f7d979,#fff5d5);background-size:cover;background-position:center;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;overflow:hidden}
+.banner-card.has-image{color:white;text-shadow:0 1px 5px #222;position:relative}
+.banner-card.has-image:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.65),rgba(0,0,0,.08))}
+.banner-card>*{position:relative;z-index:1}
+.banner-card h2{font-size:25px;margin-bottom:10px;text-align:left;color:inherit}
+.banner-card p{margin-bottom:12px}
+.banner-card a{display:inline-block;background:#b8860b;color:white;text-decoration:none;padding:10px 18px;border-radius:22px}
+
+.offer-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0 15px}
+.offer-card{background:#fff7df;border:1px dashed #c49a2c;border-radius:12px;padding:15px}
+.offer-card h3{color:#916900;margin-bottom:7px}
+.offer-code{font-weight:bold;color:#a35b00;margin:8px 0}
+
+.festival-card{margin:12px 15px;padding:20px;border-radius:14px;background:#fff0d1;display:flex;gap:15px;align-items:center}
+.festival-card img{width:105px;height:105px;object-fit:cover;border-radius:10px}
+.festival-card h3{color:#9b7200;margin-bottom:8px}
+
+.hidden-section{display:none!important}
+
+#homepagePopup{display:none;position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:9999;align-items:center;justify-content:center;padding:20px}
+.popup-box{background:white;padding:25px;border-radius:15px;max-width:360px;width:100%;text-align:center;position:relative}
+#closePopup{position:absolute;right:10px;top:10px;width:auto;padding:6px 10px;background:#333;color:white;border:0;border-radius:5px}
+
+@media(max-width:480px){
+.categories{grid-template-columns:repeat(3,1fr)}
+.offer-list{grid-template-columns:1fr}
+.banner-card{min-height:160px}
+.festival-card img{width:85px;height:85px}
 }
-
-body {
-    font-family: Arial, sans-serif;
-    background: #fffdf8;
-    color: #333;
-}
-
-header {
-    background: white;
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 8px #ddd;
-}
-
-.logo {
-    font-size: 23px;
-    font-weight: bold;
-    color: #b8860b;
-}
-
-.cart {
-    background: #b8860b;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 8px;
-}
-
-/* COMMON NAVIGATION */
-
-#siteNav {
-    width: 100%;
-}
-
-.hero {
-    padding: 55px 20px;
-    text-align: center;
-    background: linear-gradient(135deg,#fff1c2,#fff);
-}
-
-.hero h1 {
-    color: #9b7200;
-    font-size: 32px;
-    margin-bottom: 15px;
-}
-
-.hero p {
-    margin-bottom: 15px;
-}
-
-.button {
-    display: inline-block;
-    background: #b8860b;
-    color: white;
-    padding: 12px 25px;
-    border-radius: 25px;
-    text-decoration: none;
-}
-
-h2 {
-    text-align: center;
-    margin: 30px 0 20px;
-    color: #9b7200;
-}
-
-.categories {
-    display: grid;
-    grid-template-columns: repeat(4,1fr);
-    gap: 10px;
-    padding: 15px;
-    text-align: center;
-}
-
-.category {
-    background: white;
-    padding: 15px 5px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px #ddd;
-    font-size: 13px;
-    color: #333;
-    border: none;
-}
-
-.products {
-    display: grid;
-    grid-template-columns: repeat(2,1fr);
-    gap: 15px;
-    padding: 15px;
-}
-
-.product {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px #ddd;
-    text-align: center;
-    padding-bottom: 15px;
-}
-
-.product img {
-    width: 100%;
-    height: 160px;
-    object-fit: contain;
-    background: #fff1c2;
-}
-
-.product h3 {
-    font-size: 15px;
-    margin: 12px 5px;
-}
-
-.price {
-    color: #b8860b;
-    font-weight: bold;
-    margin: 8px;
-}
-
-.product-buttons {
-    padding: 0 7px;
-}
-
-.product button {
-    width: 95%;
-    background: #b8860b;
-    color: white;
-    border: none;
-    padding: 10px 8px;
-    border-radius: 20px;
-    margin: 5px 0;
-    font-size: 13px;
-}
-
-.product .buy-button {
-    background: #e67e22;
-}
-
-.product .wish-button {
-    background: #d63384;
-}
-
-#status {
-    text-align: center;
-    padding: 15px;
-}
-
-footer {
-    background: #29231a;
-    color: white;
-    padding: 30px;
-    text-align: center;
-    margin-top: 30px;
-}
-
-.whatsapp {
-    position: fixed;
-    bottom: 20px;
-    right: 15px;
-    background: #25D366;
-    color: white;
-    padding: 14px;
-    border-radius: 50px;
-    text-decoration: none;
-    font-weight: bold;
-    z-index: 10;
-}
-
-button {
-    cursor: pointer;
-    transition: background-color .25s ease,
-                transform .15s ease,
-                box-shadow .2s ease;
-}
-
-button:active {
-    transform: scale(.92);
-    filter: brightness(.80);
-    box-shadow: 0 2px 8px rgba(0,0,0,.25);
-}
-
-button.clicked {
-    animation: buttonClick .3s ease;
-}
-
-@keyframes buttonClick {
-    0% { transform: scale(1); }
-    50% { transform: scale(.92); }
-    100% { transform: scale(1); }
-}
-
-.button:active,
-.cart:active,
-.whatsapp:active {
-    transform: scale(.94);
-    filter: brightness(.80);
-}
-
-@media(max-width:350px) {
-    .products {
-        grid-template-columns: 1fr;
-    }
+@media(max-width:350px){
+.products{grid-template-columns:1fr}
+.logo{font-size:19px}
 }
 </style>
 </head>
@@ -220,628 +74,723 @@ button.clicked {
 <body>
 
 <header>
-
-    <div class="logo">PMPS GOLD</div>
-
-    <button class="cart"
-    onclick="window.location.href='./cart.html'">
-
-        🛒 Cart: <span id="count">0</span>
-
-    </button>
-
+<div class="logo" id="storeLogo">PMPS GOLD</div>
+<button class="cart" onclick="location.href='./cart.html'">
+🛒 Cart: <span id="count">0</span>
+</button>
 </header>
 
-<!-- COMMON NAVIGATION MENU -->
-
 <div id="siteNav">
-    <p style="text-align:center;padding:15px;">
-        Loading Menu...
-    </p>
+<p style="text-align:center;padding:15px">Loading Menu...</p>
 </div>
 
-<section class="hero" id="home">
-
-    <h1>Welcome to PMPS GOLD</h1>
-
-    <p>Discover Premium Artificial Jewellery</p>
-
-    <p>Retail & Wholesale Available</p>
-
-    <a href="#products" class="button">Shop Now</a>
-
+<section class="hero">
+<h1>Welcome to PMPS GOLD</h1>
+<p>Discover Premium Artificial Jewellery</p>
+<p>Retail & Wholesale Available</p>
+<a href="#products" class="button">Shop Now</a>
 </section>
 
-<h2 id="categories">Shop By Category</h2>
+<!-- ADMIN BANNERS -->
+<div id="bannerSection"></div>
+
+<!-- ADMIN OFFERS -->
+<div id="offerSection"></div>
+
+<!-- ADMIN FESTIVALS -->
+<div id="festivalSection"></div>
+
+<h2 class="section-title">Shop By Category</h2>
 
 <div class="categories">
-
-    <button class="category" data-category="All">
-        🌟<br>All
-    </button>
-
-    <button class="category" data-category="Earrings">
-        💎<br>Earrings
-    </button>
-
-    <button class="category" data-category="Necklace">
-        📿<br>Necklace
-    </button>
-
-    <button class="category" data-category="Rings">
-        💍<br>Rings
-    </button>
-
-    <button class="category" data-category="Bangles">
-        ✨<br>Bangles
-    </button>
-
+<button class="category" data-category="All">🌟<br>All</button>
+<button class="category" data-category="Earrings">💎<br>Earrings</button>
+<button class="category" data-category="Necklace">📿<br>Necklace</button>
+<button class="category" data-category="Rings">💍<br>Rings</button>
+<button class="category" data-category="Bangles">✨<br>Bangles</button>
 </div>
 
-<h2 id="products">Featured Products</h2>
+<section id="saleSection" class="hidden-section">
+<h2 class="section-title">🔥 Special Sale</h2>
+<div class="products" id="saleList"></div>
+</section>
 
-<div style="padding:15px;">
+<section id="bestSellerSection" class="hidden-section">
+<h2 class="section-title">⭐ Best Sellers</h2>
+<div class="products" id="bestSellerList"></div>
+</section>
 
-    <input
-        type="text"
-        id="searchInput"
-        placeholder="🔍 Search Jewellery..."
-        style="
-            width:100%;
-            padding:14px;
-            border:1px solid #b8860b;
-            border-radius:10px;
-            font-size:16px;
-            outline:none;
-        "
-    >
+<section id="newArrivalSection" class="hidden-section">
+<h2 class="section-title">✨ New Arrivals</h2>
+<div class="products" id="newArrivalList"></div>
+</section>
 
+<h2 class="section-title" id="products">Featured Products</h2>
+
+<div style="padding:15px">
+<input type="text" id="searchInput"
+placeholder="🔍 Search Jewellery..."
+style="width:100%;padding:14px;border:1px solid #b8860b;border-radius:10px;font-size:16px">
 </div>
 
 <p id="status">Loading Products...</p>
-
 <div class="products" id="productList"></div>
 
 <footer>
-
-    <h3>PMPS GOLD</h3>
-
-    <p>Premium Artificial Jewellery</p>
-
-    <p>Retail & Wholesale Available</p>
-
-    <p>WhatsApp: +91 7699377496</p>
-
-    <p>© 2026 PMPS GOLD</p>
-
+<h3 id="footerStoreName">PMPS GOLD</h3>
+<p id="footerDescription">Premium Artificial Jewellery</p>
+<p>Retail & Wholesale Available</p>
+<p id="footerPhone">WhatsApp: +91 7699377496</p>
+<p id="footerAddress"></p>
+<p>© 2026 PMPS GOLD</p>
 </footer>
 
-<a class="whatsapp"
+<a class="whatsapp" id="whatsappLink"
 href="https://wa.me/917699377496"
-target="_blank"
-rel="noopener">
+target="_blank" rel="noopener">WhatsApp</a>
 
-    WhatsApp
-
-</a>
-
-<!-- LOAD COMMON NAVIGATION -->
+<!-- HOMEPAGE POPUP -->
+<div id="homepagePopup">
+<div class="popup-box">
+<button id="closePopup">✕</button>
+<h2 id="popupHeading"></h2>
+<h3 id="popupSubheading" style="margin:10px 0;color:#b8860b"></h3>
+<p id="popupText"></p>
+</div>
+</div>
 
 <script src="./nav.js"></script>
 
 <script type="module">
 
-import { db, auth } from "./firebase.js";
+import {db,auth} from "./firebase.js";
 
 import {
-    collection,
-    getDocs,
-    doc,
-    setDoc,
-    serverTimestamp
+collection,getDocs,doc,getDoc,setDoc,serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+let cart=JSON.parse(localStorage.getItem("pmps_cart"))||[];
+let storefront={};
+let allProducts=[];
 
-let cart = JSON.parse(
-    localStorage.getItem("pmps_cart")
-) || [];
+const $=id=>document.getElementById(id);
 
-
-// CART UPDATE
-
-function updateCart() {
-
-    localStorage.setItem(
-        "pmps_cart",
-        JSON.stringify(cart)
-    );
-
-    document.getElementById("count").innerText =
-        cart.reduce(
-            (sum,item) => sum + Number(item.quantity || 0),
-            0
-        );
-
+function money(value){
+return "₹"+Number(value||0).toLocaleString("en-IN");
 }
 
+/* CART */
 
-// ADD TO CART
+function updateCart(){
+localStorage.setItem("pmps_cart",JSON.stringify(cart));
 
-function addCart(product) {
-
-    const retailPrice =
-        Number(product.retailPrice || product.price || 0);
-
-    const existing = cart.find(item =>
-        item.productId === product.id &&
-        item.orderType === "retail"
-    );
-
-    if (existing) {
-
-        existing.quantity++;
-        existing.price = retailPrice;
-
-    } else {
-
-        cart.push({
-
-            productId: product.id,
-            name: product.name,
-            price: retailPrice,
-            quantity: 1,
-            orderType: "retail",
-            moq: 1
-
-        });
-
-    }
-
-    updateCart();
-
-    alert(product.name + " Added to Cart!");
-
+$("count").innerText=cart.reduce(
+(sum,item)=>sum+Number(item.quantity||0),0
+);
 }
 
+function addCart(product){
 
-// BUY NOW
+const price=Number(product.retailPrice||product.price||0);
 
-async function buyNow(product) {
-
-    const user = auth.currentUser;
-
-    if (!user) {
-
-        alert("Please Login First!");
-
-        localStorage.setItem(
-            "pmps_redirect_after_login",
-            "buy_now"
-        );
-
-        window.location.href = "./customer-login.html";
-
-        return;
-
-    }
-
-    const buyNowItem = {
-
-        productId: product.id,
-
-        name: product.name,
-
-        price: Number(
-            product.retailPrice || product.price || 0
-        ),
-
-        quantity: 1,
-
-        orderType: "retail",
-
-        moq: 1
-
-    };
-
-    if (buyNowItem.price <= 0) {
-
-        alert("Invalid Product Price!");
-
-        return;
-
-    }
-
-    localStorage.setItem(
-        "pmps_buy_now",
-        JSON.stringify(buyNowItem)
-    );
-
-    window.location.href = "./checkout.html";
-
-}
-
-
-// ADD TO WISHLIST
-
-async function addWishlist(id,name,price,image) {
-
-    const user = auth.currentUser;
-
-    if (!user) {
-
-        alert("Please Login First!");
-
-        window.location.href = "./customer-login.html";
-
-        return;
-
-    }
-
-    try {
-
-        await setDoc(
-            doc(db,"Customers",user.uid,"Wishlist",id),
-            {
-
-                productId: id,
-                name: name,
-                price: price,
-                image: image,
-                addedAt: serverTimestamp()
-
-            }
-        );
-
-        alert(name + " Added to Wishlist ❤️");
-
-    } catch(error) {
-
-        alert("Wishlist Error: " + error.message);
-
-    }
-
-}
-
-
-// PRODUCT BUTTON CLICK
-
-document.getElementById("productList").addEventListener(
-    "click",
-    event => {
-
-        const cartButton =
-            event.target.closest(".add-button");
-
-        const wishButton =
-            event.target.closest(".wish-button");
-
-        const buyButton =
-            event.target.closest(".buy-button");
-
-
-        if (cartButton) {
-
-            addCart({
-
-                id: cartButton.dataset.id,
-
-                name: cartButton.dataset.name,
-
-                price: cartButton.dataset.price,
-
-                retailPrice: cartButton.dataset.retail
-
-            });
-
-        }
-
-
-        if (buyButton) {
-
-            buyNow({
-
-                id: buyButton.dataset.id,
-
-                name: buyButton.dataset.name,
-
-                price: buyButton.dataset.price,
-
-                retailPrice: buyButton.dataset.retail
-
-            });
-
-        }
-
-
-        if (wishButton) {
-
-            addWishlist(
-
-                wishButton.dataset.id,
-
-                wishButton.dataset.name,
-
-                Number(wishButton.dataset.price),
-
-                wishButton.dataset.image
-
-            );
-
-        }
-
-    }
+const existing=cart.find(item=>
+item.productId===product.id &&
+item.orderType==="retail"
 );
 
+if(existing){
+existing.quantity++;
+existing.price=price;
+}else{
+cart.push({
+productId:product.id,
+name:product.name,
+price:price,
+quantity:1,
+orderType:"retail",
+moq:1
+});
+}
 
-// CATEGORY FILTER
+updateCart();
+alert(product.name+" Added to Cart!");
+}
 
-document.querySelector(".categories").addEventListener(
-    "click",
-    function(event) {
+/* BUY NOW */
 
-        const button =
-            event.target.closest("[data-category]");
+async function buyNow(product){
 
-        if (!button) return;
+const user=auth.currentUser;
 
-        const selectedCategory =
-            button.dataset.category.toLowerCase();
+if(!user){
+alert("Please Login First!");
+localStorage.setItem("pmps_redirect_after_login","buy_now");
+location.href="./customer-login.html";
+return;
+}
 
-        document.getElementById("searchInput").value = "";
+const item={
+productId:product.id,
+name:product.name,
+price:Number(product.retailPrice||product.price||0),
+quantity:1,
+orderType:"retail",
+moq:1
+};
 
-        const products =
-            document.querySelectorAll("#productList .product");
+if(item.price<=0){
+alert("Invalid Product Price!");
+return;
+}
 
-        let found = 0;
+localStorage.setItem("pmps_buy_now",JSON.stringify(item));
+location.href="./checkout.html";
+}
 
-        products.forEach(product => {
+/* WISHLIST */
 
-            const category =
-                (product.dataset.category || "")
-                .trim()
-                .toLowerCase();
+async function addWishlist(id,name,price,image){
 
-            const match =
-                selectedCategory === "all" ||
-                category === selectedCategory;
+const user=auth.currentUser;
 
-            product.style.display = match ? "" : "none";
+if(!user){
+alert("Please Login First!");
+location.href="./customer-login.html";
+return;
+}
 
-            if (match) found++;
-
-        });
-
-        document.getElementById("status").textContent =
-            found === 0
-            ? "No Products Found in This Category"
-            : "";
-
-    }
+try{
+await setDoc(
+doc(db,"Customers",user.uid,"Wishlist",id),
+{
+productId:id,
+name:name,
+price:price,
+image:image,
+addedAt:serverTimestamp()
+},
+{merge:true}
 );
 
+alert(name+" Added to Wishlist ❤️");
 
-// PRODUCT SEARCH
+}catch(error){
+alert("Wishlist Error: "+error.message);
+}
+}
 
-const searchInput =
-    document.getElementById("searchInput");
+/* PRODUCT CARD */
 
-searchInput.addEventListener("input",function() {
+function makeProductCard(product){
 
-    const searchText =
-        this.value.trim().toLowerCase();
+const card=document.createElement("div");
+card.className="product";
 
-    const products =
-        document.querySelectorAll("#productList .product");
+card.dataset.category=(product.category||"").trim().toLowerCase();
 
-    let found = 0;
+const img=document.createElement("img");
+img.src=product.image||product.imageUrl||"";
+img.alt=product.name||"Jewellery";
+img.onerror=()=>img.style.display="none";
 
-    products.forEach(product => {
+const name=document.createElement("h3");
+name.textContent=product.name||"Product";
 
-        const productName =
-            product.querySelector("h3")
-            .textContent.toLowerCase();
+const regular=Number(product.retailPrice||product.price||0);
+const sale=Number(product.salePrice||0);
+const finalPrice=(sale>0&&sale<regular)?sale:regular;
 
-        const match =
-            productName.includes(searchText);
+const price=document.createElement("div");
+price.className="price";
+price.textContent="Retail "+money(finalPrice);
 
-        product.style.display = match ? "" : "none";
+if(finalPrice<regular){
+const old=document.createElement("span");
+old.className="old-price";
+old.textContent=money(regular);
+price.appendChild(old);
+}
 
-        if (match) found++;
+const buttons=document.createElement("div");
+buttons.className="product-buttons";
 
-    });
+const cartBtn=document.createElement("button");
+cartBtn.className="add-button";
+cartBtn.textContent="🛒 Add to Cart";
+cartBtn.dataset.id=product.id;
+cartBtn.dataset.name=product.name||"Product";
+cartBtn.dataset.price=finalPrice;
 
-    document.getElementById("status").textContent =
-        found === 0
-        ? "No Matching Products Found"
-        : "";
+const buyBtn=document.createElement("button");
+buyBtn.className="buy-button";
+buyBtn.textContent="⚡ Buy Now";
+buyBtn.dataset.id=product.id;
+buyBtn.dataset.name=product.name||"Product";
+buyBtn.dataset.price=finalPrice;
+
+const wishBtn=document.createElement("button");
+wishBtn.className="wish-button";
+wishBtn.textContent="❤️ Add to Wishlist";
+wishBtn.dataset.id=product.id;
+wishBtn.dataset.name=product.name||"Product";
+wishBtn.dataset.price=finalPrice;
+wishBtn.dataset.image=product.image||product.imageUrl||"";
+
+buttons.append(cartBtn,buyBtn,wishBtn);
+
+card.addEventListener("click",event=>{
+if(event.target.closest("button"))return;
+location.href="product-details.html?id="+encodeURIComponent(product.id);
+});
+
+card.append(img,name,price,buttons);
+
+return card;
+}
+
+/* BUTTON EVENTS */
+
+document.addEventListener("click",event=>{
+
+const c=event.target.closest(".add-button");
+const b=event.target.closest(".buy-button");
+const w=event.target.closest(".wish-button");
+
+if(c){
+addCart({
+id:c.dataset.id,
+name:c.dataset.name,
+price:c.dataset.price,
+retailPrice:c.dataset.price
+});
+}
+
+if(b){
+buyNow({
+id:b.dataset.id,
+name:b.dataset.name,
+price:b.dataset.price,
+retailPrice:b.dataset.price
+});
+}
+
+if(w){
+addWishlist(
+w.dataset.id,
+w.dataset.name,
+Number(w.dataset.price),
+w.dataset.image
+);
+}
 
 });
 
+/* BANNER */
 
-// LOAD PRODUCTS
+function renderBanners(items){
 
-async function loadProducts() {
+const section=$("bannerSection");
+section.innerHTML="";
 
-    const list =
-        document.getElementById("productList");
+items.filter(item=>item.active!==false).forEach(item=>{
 
-    const status =
-        document.getElementById("status");
+const card=document.createElement("div");
 
-    try {
+card.className="banner-card"+(item.image?" has-image":"");
 
-        const snapshot =
-            await getDocs(collection(db,"Products"));
-
-        list.innerHTML = "";
-
-        if (snapshot.empty) {
-
-            status.innerText = "No Products Available";
-
-            return;
-
-        }
-
-        snapshot.forEach(productDoc => {
-
-            const product = productDoc.data();
-
-            const card = document.createElement("div");
-
-            card.className = "product";
-
-            card.dataset.category =
-                (product.category || "").trim().toLowerCase();
-
-
-            const img = document.createElement("img");
-
-            img.alt = product.name || "Jewellery";
-
-            img.src = product.image || "";
-
-            img.onerror = () => img.remove();
-
-
-            const name = document.createElement("h3");
-
-            name.textContent = product.name || "Product";
-
-
-            const price = document.createElement("div");
-
-            price.className = "price";
-
-            price.textContent =
-                "Retail ₹" +
-                (product.retailPrice || product.price || 0);
-
-
-            const buttons = document.createElement("div");
-
-            buttons.className = "product-buttons";
-
-
-            const cartButton = document.createElement("button");
-
-            cartButton.className = "add-button";
-
-            cartButton.textContent = "🛒 Add to Cart";
-
-            cartButton.dataset.id = productDoc.id;
-
-            cartButton.dataset.name =
-                product.name || "Product";
-
-            cartButton.dataset.price =
-                product.price || 0;
-
-            cartButton.dataset.retail =
-                product.retailPrice || product.price || 0;
-
-
-            const buyButton = document.createElement("button");
-
-            buyButton.className = "buy-button";
-
-            buyButton.textContent = "⚡ Buy Now";
-
-            buyButton.dataset.id = productDoc.id;
-
-            buyButton.dataset.name =
-                product.name || "Product";
-
-            buyButton.dataset.price =
-                product.price || 0;
-
-            buyButton.dataset.retail =
-                product.retailPrice || product.price || 0;
-
-
-            const wishButton = document.createElement("button");
-
-            wishButton.className = "wish-button";
-
-            wishButton.textContent = "❤️ Add to Wishlist";
-
-            wishButton.dataset.id = productDoc.id;
-
-            wishButton.dataset.name =
-                product.name || "Product";
-
-            wishButton.dataset.price =
-                product.retailPrice || product.price || 0;
-
-            wishButton.dataset.image =
-                product.image || "";
-
-
-            buttons.append(
-                cartButton,
-                buyButton,
-                wishButton
-            );
-
-
-            card.style.cursor = "pointer";
-
-            card.addEventListener("click",function(event) {
-
-                if (event.target.closest("button")) return;
-
-                window.location.href =
-                    "product-details.html?id=" +
-                    encodeURIComponent(productDoc.id);
-
-            });
-
-
-            card.append(
-                img,
-                name,
-                price,
-                buttons
-            );
-
-            list.appendChild(card);
-
-        });
-
-        status.innerText = "";
-
-    } catch(error) {
-
-        status.innerText =
-            "Error Loading Products: " + error.message;
-
-    }
-
+if(item.image){
+card.style.backgroundImage=
+`url("${item.image.replace(/"/g,"%22")}")`;
 }
 
+const title=document.createElement("h2");
+title.textContent=item.title||"Special Collection";
 
-// BUTTON ANIMATION
+const description=document.createElement("p");
+description.textContent=item.description||"Discover our latest collection.";
 
-document.addEventListener("click",function(event) {
+card.append(title,description);
 
-    const button = event.target.closest("button");
+if(item.buttonText){
 
-    if (!button) return;
+const link=document.createElement("a");
+link.textContent=item.buttonText;
+link.href=item.buttonLink||"#products";
 
-    button.classList.remove("clicked");
+if(/^https?:\/\//i.test(link.href)){
+link.target="_blank";
+link.rel="noopener";
+}
 
-    void button.offsetWidth;
+card.appendChild(link);
+}
 
-    button.classList.add("clicked");
+section.appendChild(card);
 
 });
 
+}
 
-// INITIAL LOAD
+/* OFFERS */
+
+function renderOffers(items){
+
+const section=$("offerSection");
+section.innerHTML="";
+
+const today=new Date();
+
+const active=items.filter(item=>{
+
+if(item.active===false)return false;
+
+if(item.expiry){
+const expiry=new Date(item.expiry+"T23:59:59");
+if(!isNaN(expiry.getTime())&&expiry<today)return false;
+}
+
+return true;
+
+});
+
+if(!active.length)return;
+
+const heading=document.createElement("h2");
+heading.className="section-title";
+heading.textContent="🎁 Active Offers";
+
+const list=document.createElement("div");
+list.className="offer-list";
+
+active.forEach(item=>{
+
+const card=document.createElement("div");
+card.className="offer-card";
+
+const title=document.createElement("h3");
+title.textContent=item.title||"Special Offer";
+
+const description=document.createElement("p");
+description.textContent=item.description||"";
+
+const code=document.createElement("div");
+code.className="offer-code";
+code.textContent=item.code?"Code: "+item.code:"";
+
+const discount=document.createElement("strong");
+discount.textContent=item.discount?item.discount+"% OFF":"";
+
+const minimum=document.createElement("p");
+minimum.textContent=Number(item.minOrder)>0?
+"Minimum Order: "+money(item.minOrder):"";
+
+card.append(title,description,code,discount,minimum);
+list.appendChild(card);
+
+});
+
+section.append(heading,list);
+
+}
+
+/* FESTIVALS */
+
+function renderFestivals(items){
+
+const section=$("festivalSection");
+section.innerHTML="";
+
+const today=new Date().toISOString().slice(0,10);
+
+items.filter(item=>{
+
+if(item.active===false)return false;
+if(item.startDate&&today<item.startDate)return false;
+if(item.endDate&&today>item.endDate)return false;
+
+return true;
+
+}).forEach(item=>{
+
+const card=document.createElement("div");
+card.className="festival-card";
+
+if(item.image){
+const img=document.createElement("img");
+img.src=item.image;
+img.alt=item.name||"Festival";
+img.onerror=()=>img.remove();
+card.appendChild(img);
+}
+
+const content=document.createElement("div");
+
+const title=document.createElement("h3");
+title.textContent=item.title||item.name||"Festival Special";
+
+const message=document.createElement("p");
+message.textContent=item.message||"Celebrate with PMPS GOLD";
+
+content.append(title,message);
+card.appendChild(content);
+section.appendChild(card);
+
+});
+
+}
+
+/* HOMEPAGE POPUP */
+
+function renderPopup(data){
+
+if(!data.popupEnabled)return;
+
+if(sessionStorage.getItem("pmps_popup_closed")==="yes")return;
+
+$("popupHeading").textContent=data.popupTitle||"Welcome to PMPS GOLD";
+$("popupSubheading").textContent=data.popupSubtitle||"";
+$("popupText").textContent=data.popupMessage||"";
+
+$("homepagePopup").style.display="flex";
+
+}
+
+$("closePopup").addEventListener("click",()=>{
+$("homepagePopup").style.display="none";
+sessionStorage.setItem("pmps_popup_closed","yes");
+});
+
+$("homepagePopup").addEventListener("click",event=>{
+if(event.target.id==="homepagePopup"){
+$("closePopup").click();
+}
+});
+
+/* STORE SETTINGS */
+
+function applyStoreSettings(data){
+
+if(data.storeName){
+$("storeLogo").textContent=data.storeName;
+$("footerStoreName").textContent=data.storeName;
+document.title=data.storeName+" | Premium Jewellery";
+}
+
+if(data.description){
+$("footerDescription").textContent=data.description;
+}
+
+if(data.phone){
+$("footerPhone").textContent="Phone: "+data.phone;
+}
+
+if(data.address){
+$("footerAddress").textContent=data.address;
+}
+
+const whatsapp=(data.whatsapp||"917699377496").replace(/\D/g,"");
+
+$("whatsappLink").href=
+"https://wa.me/"+(whatsapp.startsWith("91")?whatsapp:"91"+whatsapp);
+
+}
+
+/* FIRESTORE COLLECTION LOAD */
+
+async function loadCollection(name){
+
+try{
+
+const snapshot=await getDocs(collection(db,name));
+
+return snapshot.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+}catch(error){
+
+console.error(name+" Error:",error);
+return [];
+
+}
+
+}
+
+/* LOAD STOREFRONT */
+
+async function loadStorefront(){
+
+try{
+
+const snapshot=await getDoc(doc(db,"Storefront","settings"));
+
+if(snapshot.exists()){
+
+storefront=snapshot.data();
+
+applyStoreSettings(storefront);
+renderPopup(storefront);
+
+}
+
+}catch(error){
+
+console.error("Storefront Error:",error);
+
+}
+
+}
+
+/* LOAD PRODUCTS */
+
+async function loadProducts(){
+
+const list=$("productList");
+const status=$("status");
+
+try{
+
+const snapshot=await getDocs(collection(db,"Products"));
+
+allProducts=snapshot.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+list.innerHTML="";
+
+if(!allProducts.length){
+status.textContent="No Products Available";
+return;
+}
+
+allProducts.forEach(product=>{
+list.appendChild(makeProductCard(product));
+});
+
+status.textContent="";
+
+const saleProducts=allProducts.filter(product=>{
+
+const regular=Number(product.retailPrice||product.price||0);
+const sale=Number(product.salePrice||0);
+
+return sale>0&&sale<regular;
+
+});
+
+const bestSellers=allProducts.filter(product=>
+product.bestSeller===true||product.isBestSeller===true
+);
+
+const newArrivals=allProducts.filter(product=>
+product.isNew===true||product.newArrival===true
+);
+
+renderProductGroup("saleList",saleProducts,"saleSection");
+renderProductGroup("bestSellerList",bestSellers,"bestSellerSection");
+renderProductGroup("newArrivalList",newArrivals,"newArrivalSection");
+
+if(storefront.bestSellerEnabled===false){
+$("bestSellerSection").classList.add("hidden-section");
+}
+
+if(storefront.newArrivalEnabled===false){
+$("newArrivalSection").classList.add("hidden-section");
+}
+
+}catch(error){
+
+status.textContent="Error Loading Products: "+error.message;
+
+}
+
+}
+
+function renderProductGroup(targetId,products,sectionId){
+
+const target=$(targetId);
+target.innerHTML="";
+
+products.forEach(product=>{
+target.appendChild(makeProductCard(product));
+});
+
+$(sectionId).classList.toggle("hidden-section",products.length===0);
+
+}
+
+/* CATEGORY FILTER */
+
+document.querySelector(".categories").addEventListener("click",event=>{
+
+const button=event.target.closest("[data-category]");
+if(!button)return;
+
+const category=button.dataset.category.toLowerCase();
+
+$("searchInput").value="";
+
+let found=0;
+
+document.querySelectorAll("#productList .product").forEach(card=>{
+
+const match=category==="all"||
+(card.dataset.category||"")===category;
+
+card.style.display=match?"":"none";
+
+if(match)found++;
+
+});
+
+$("status").textContent=found?"":"No Products Found";
+
+});
+
+/* SEARCH */
+
+$("searchInput").addEventListener("input",function(){
+
+const query=this.value.trim().toLowerCase();
+
+let found=0;
+
+document.querySelectorAll("#productList .product").forEach(card=>{
+
+const name=card.querySelector("h3").textContent.toLowerCase();
+const category=(card.dataset.category||"").toLowerCase();
+
+const match=name.includes(query)||category.includes(query);
+
+card.style.display=match?"":"none";
+
+if(match)found++;
+
+});
+
+$("status").textContent=found?"":"No Matching Products Found";
+
+});
+
+/* START */
 
 updateCart();
 
-loadProducts();
+await loadStorefront();
+
+const [banners,offers,festivals]=await Promise.all([
+loadCollection("Banners"),
+loadCollection("Offers"),
+loadCollection("Festivals")
+]);
+
+renderBanners(banners);
+renderOffers(offers);
+renderFestivals(festivals);
+
+await loadProducts();
 
 </script>
 
